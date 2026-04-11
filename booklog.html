@@ -1,0 +1,3464 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Booklog</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg2: #f7f7f5;
+    --bg3: #f0efe9;
+    --border: rgba(0,0,0,0.08);
+    --border2: rgba(0,0,0,0.15);
+    --text: #1a1a1a;
+    --text2: #6b6b6b;
+    --text3: #a0a0a0;
+    --accent: #1a1a1a;
+    --tag-bg: #f0efe9;
+    --tag-text: #4a4a4a;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', -apple-system, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.6; }
+
+  /* Layout */
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 220px; border-right: 1px solid var(--border); padding: 2rem 1rem; position: fixed; top: 0; left: 0; height: 100vh; background: var(--bg); z-index: 100; display: flex; flex-direction: column; }
+  .main { margin-left: 220px; padding: 2.5rem 2rem; max-width: 900px; width: 100%; }
+
+  /* Sidebar */
+  .logo { font-size: 18px; font-weight: 600; letter-spacing: -0.5px; margin-bottom: 2rem; padding: 0 0.5rem; }
+  .logo span { color: var(--text3); font-weight: 400; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--radius-sm); cursor: pointer; color: var(--text2); font-size: 13px; transition: all 0.15s; margin-bottom: 2px; }
+  .nav-item:hover { background: var(--bg2); color: var(--text); }
+  .nav-item.active { background: var(--accent); color: #fff; }
+  .nav-icon { width: 16px; text-align: center; font-size: 14px; }
+  .nav-badge { margin-left: auto; background: var(--bg3); color: var(--text2); font-size: 11px; padding: 1px 7px; border-radius: 10px; }
+  .nav-item.active .nav-badge { background: rgba(255,255,255,0.2); color: #fff; }
+  .sidebar-footer { margin-top: auto; font-size: 11px; color: var(--text3); padding: 0 0.5rem; }
+
+  /* Sections */
+  .section { display: none; }
+  .section.active { display: block; }
+  .page-title { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; margin-bottom: 0.25rem; }
+  .page-sub { font-size: 13px; color: var(--text2); margin-bottom: 2rem; }
+
+  /* Stats row */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 2rem; }
+  .stat { background: var(--bg2); border-radius: var(--radius); padding: 1rem 1.25rem; }
+  .stat-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .stat-val { font-size: 24px; font-weight: 600; letter-spacing: -1px; }
+  .stat-sub { font-size: 11px; color: var(--text2); margin-top: 2px; }
+
+  /* Cards */
+  .card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 10px; transition: border-color 0.15s; }
+  .card:hover { border-color: var(--border2); }
+  .card-header { display: flex; align-items: flex-start; gap: 12px; }
+  .book-cover { width: 44px; height: 60px; border-radius: 4px; flex-shrink: 0; overflow: hidden; background: var(--bg3); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .book-cover img { width: 100%; height: 100%; object-fit: cover; }
+  .book-main { flex: 1; min-width: 0; }
+  .book-title { font-size: 15px; font-weight: 600; letter-spacing: -0.3px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .book-author { font-size: 12px; color: var(--text2); margin-bottom: 6px; }
+  .book-pages { font-size: 11px; color: var(--text3); }
+  .book-actions { display: flex; gap: 6px; margin-left: auto; flex-shrink: 0; }
+
+  /* Tags */
+  .tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+  .tag { background: var(--tag-bg); color: var(--tag-text); font-size: 11px; padding: 3px 8px; border-radius: 4px; display: flex; align-items: center; gap: 4px; }
+  .tag-remove { cursor: pointer; color: var(--text3); font-size: 12px; }
+  .tag-remove:hover { color: var(--text); }
+  .priority-badge { font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 500; }
+  .pri-high { background: #fff0f0; color: #c0392b; }
+  .pri-mid { background: #fff8e6; color: #b7770d; }
+  .pri-low { background: #f0f8ff; color: #2980b9; }
+
+  /* Buttons */
+  .btn { padding: 8px 16px; border-radius: var(--radius-sm); font-size: 13px; cursor: pointer; font-family: inherit; transition: all 0.15s; border: 1px solid var(--border2); background: var(--bg); color: var(--text); }
+  .btn:hover { background: var(--bg2); }
+  .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .btn-ghost { border: none; background: none; color: var(--text2); }
+  .btn-ghost:hover { color: var(--text); background: var(--bg2); }
+  .btn-danger { color: #c0392b; border-color: #fadbd8; }
+  .btn-danger:hover { background: #fff0f0; }
+  .icon-btn { width: 28px; height: 28px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; color: var(--text2); transition: all 0.15s; }
+  .icon-btn:hover { background: var(--bg2); border-color: var(--border2); color: var(--text); }
+
+  /* Forms */
+  .form-row { display: flex; gap: 10px; margin-bottom: 10px; }
+  .form-group { flex: 1; }
+  .form-group label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 4px; font-weight: 500; }
+  input[type=text], input[type=number], input[type=date], select, textarea {
+    width: 100%; padding: 8px 10px; border: 1px solid var(--border2); border-radius: var(--radius-sm);
+    font-family: inherit; font-size: 13px; color: var(--text); background: var(--bg);
+    outline: none; transition: border-color 0.15s;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 60px; }
+
+  /* Search box */
+  .search-wrap { position: relative; }
+  .search-wrap input { padding-right: 36px; }
+  .search-icon { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 14px; pointer-events: none; }
+  .search-results { position: absolute; top: 100%; left: 0; right: 0; background: var(--bg); border: 1px solid var(--border2); border-radius: var(--radius); z-index: 200; max-height: 300px; overflow-y: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-top: 4px; }
+  .search-result-item { padding: 10px 12px; display: flex; gap: 10px; align-items: center; cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  .search-result-item:last-child { border-bottom: none; }
+  .search-result-item:hover { background: var(--bg2); }
+  .sri-cover { width: 30px; height: 42px; border-radius: 3px; object-fit: cover; background: var(--bg3); flex-shrink: 0; }
+  .sri-info { flex: 1; min-width: 0; }
+  .sri-title { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sri-author { font-size: 11px; color: var(--text2); }
+  .sri-badge { font-size: 10px; padding: 2px 6px; background: #e8f5e9; color: #2e7d32; border-radius: 3px; flex-shrink: 0; }
+
+  /* Add book panel */
+  .add-panel { background: var(--bg2); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1.5rem; border: 1px solid var(--border); }
+  .add-panel-title { font-size: 13px; font-weight: 600; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; }
+  .tag-input-wrap { display: flex; gap: 6px; }
+  .tag-suggestions { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+  .tag-sug { font-size: 11px; padding: 3px 8px; background: var(--bg); border: 1px solid var(--border2); border-radius: 4px; cursor: pointer; color: var(--text2); }
+  .tag-sug:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* Progress bar */
+  .progress-wrap { margin-top: 10px; }
+  .progress-bar-bg { height: 4px; background: var(--bg3); border-radius: 2px; overflow: hidden; }
+  .progress-bar { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.3s; }
+  .progress-label { font-size: 11px; color: var(--text2); margin-top: 3px; }
+
+  /* Plan cards */
+  .plan-card { border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 10px; background: var(--bg); }
+  .plan-card.pinned-card { border-left: 3px solid #e67e22; }
+  .pin-btn { width: 24px; height: 24px; border: none; background: none; cursor: pointer; font-size: 14px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 4px; transition: background 0.15s; }
+  .pin-btn:hover { background: var(--bg2); }
+  .plan-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+  .plan-rank { width: 28px; height: 28px; border-radius: 50%; background: var(--bg3); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: var(--text2); flex-shrink: 0; margin-top: 2px; }
+  .plan-rank.rank-1 { background: #1a1a1a; color: #fff; }
+  .plan-rank.rank-2 { background: #555; color: #fff; }
+  .plan-rank.rank-3 { background: #888; color: #fff; }
+  .plan-daily { background: var(--bg2); border-radius: var(--radius-sm); padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; }
+  .plan-daily-label { font-size: 12px; color: var(--text2); }
+  .plan-daily-val { font-size: 20px; font-weight: 600; letter-spacing: -0.5px; }
+  .plan-daily-unit { font-size: 12px; color: var(--text2); font-weight: 400; }
+  .deadline-info { font-size: 12px; color: var(--text2); margin-top: 6px; }
+  .deadline-info b { color: var(--text); }
+  .overdue { color: #c0392b; }
+
+  /* Reading log */
+  .log-item { border-left: 2px solid var(--border2); padding: 10px 0 10px 14px; margin-bottom: 8px; position: relative; }
+  .log-item::before { content: ''; width: 7px; height: 7px; background: var(--border2); border-radius: 50%; position: absolute; left: -4.5px; top: 14px; }
+  .log-meta { font-size: 11px; color: var(--text3); margin-bottom: 3px; }
+  .log-quote { font-size: 13px; border-left: 2px solid var(--bg3); padding-left: 10px; color: var(--text2); font-style: italic; margin-top: 4px; }
+  .log-text { font-size: 13px; color: var(--text); }
+
+  /* Modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 300; display: flex; align-items: flex-start; justify-content: center; padding: 2rem 1rem; overflow-y: auto; }
+  .modal { margin-top: auto; margin-bottom: auto; }
+  .toast { position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:#1a1a1a; color:#fff; padding:8px 18px; border-radius:20px; font-size:13px; z-index:9999; opacity:0; transition:opacity 0.3s; pointer-events:none; white-space:nowrap; }
+  .toast.show { opacity:1; }
+  .modal { background: var(--bg); border-radius: var(--radius); padding: 1.5rem; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; box-shadow: 0 8px 40px rgba(0,0,0,0.12); }
+  .modal-title { font-size: 16px; font-weight: 600; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; }
+
+  /* Empty state */
+  .empty { text-align: center; padding: 4rem 2rem; color: var(--text3); }
+  .empty-icon { font-size: 40px; margin-bottom: 1rem; }
+  .empty-text { font-size: 14px; }
+
+  /* Filter bar */
+  .filter-bar { display: flex; gap: 6px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .chip { padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border2); background: var(--bg); font-size: 12px; cursor: pointer; color: var(--text2); transition: all 0.15s; font-family: inherit; }
+  .chip:hover { border-color: var(--accent); color: var(--text); }
+  .chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* Drag handle */
+  .drag-handle { cursor: grab; color: var(--text3); padding: 0 4px; font-size: 16px; }
+  .drag-handle:active { cursor: grabbing; }
+
+  /* Divider */
+  .divider { height: 1px; background: var(--border); margin: 1.5rem 0; }
+
+  /* Section header with action */
+  .sec-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+  .sec-header-title { font-size: 14px; font-weight: 600; }
+
+  /* Responsive */
+  @media (max-width: 700px) {
+    .sidebar { width: 100%; height: auto; position: fixed; bottom: 0; top: auto; border-right: none; border-top: 1px solid var(--border); padding: 0.5rem; flex-direction: row; justify-content: space-around; }
+    .main { margin-left: 0; margin-bottom: 70px; padding: 1.5rem 1rem; }
+    .logo { display: none; }
+    .nav-item { flex-direction: column; gap: 2px; font-size: 10px; padding: 6px 8px; flex: 1; justify-content: center; }
+    .nav-icon { font-size: 18px; }
+    .nav-badge { display: none; }
+    .sidebar-footer { display: none; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .form-row { flex-direction: column; }
+    /* 모바일: 책장 카드 아이콘을 하단으로 이동 */
+    .shelf-card-header { flex-wrap: wrap; }
+    .shelf-card-actions-mobile { display: flex !important; }
+    .shelf-card-actions-desktop { display: none !important; }
+  }
+  @media (min-width: 701px) {
+    .shelf-card-actions-mobile { display: none !important; }
+    .shelf-card-actions-desktop { display: flex !important; }
+  }
+
+  .ac-dropdown { position:absolute; top:100%; left:0; right:0; background:var(--bg); border:1px solid var(--border2); border-radius:var(--radius-sm); z-index:250; max-height:160px; overflow-y:auto; box-shadow:0 4px 12px rgba(0,0,0,0.08); margin-top:2px; }
+  .ac-item { padding:7px 10px; font-size:13px; cursor:pointer; color:var(--text); }
+  .ac-item:hover { background:var(--bg2); }
+
+  /* Utility */
+  .flex { display: flex; }
+  .flex-center { display: flex; align-items: center; }
+  .gap-8 { gap: 8px; }
+  .mt-1 { margin-top: 8px; }
+  .mt-2 { margin-top: 16px; }
+  .text-sm { font-size: 12px; color: var(--text2); }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="logo">📚 <span>Booklog</span></div>
+    <div class="nav-item active" onclick="showSection('plan')">
+      <span class="nav-icon">📅</span> 독서 계획
+      <span class="nav-badge" id="badge-plan">0</span>
+    </div>
+    <div class="nav-item" onclick="showSection('wishlist')">
+      <span class="nav-icon">🔖</span> 북킷리스트
+      <span class="nav-badge" id="badge-wish">0</span>
+    </div>
+    <div class="nav-item" onclick="showSection('shelf')">
+      <span class="nav-icon">📖</span> 책장
+      <span class="nav-badge" id="badge-shelf">0</span>
+    </div>
+    <div class="nav-item" onclick="showSection('memo')">
+      <span class="nav-icon">✏️</span> 메모
+    </div>
+    <div class="nav-item" onclick="showSection('stats')">
+      <span class="nav-icon">📊</span> 통계
+    </div>
+    <div class="sidebar-footer" id="firebase-status">
+      🟡 연결 중...
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <!-- ===== 독서 계획 ===== -->
+    <div class="section active" id="section-plan">
+      <div class="page-title">독서 계획</div>
+      <div class="page-sub" id="plan-sub">오늘 읽어야 할 페이지를 확인하세요</div>
+
+      <div class="stats-row" id="plan-stats" style="display:none">
+        <div class="stat">
+          <div class="stat-label">오늘 읽어야 할</div>
+          <div class="stat-val" id="stat-today">0</div>
+          <div class="stat-sub">페이지</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">계획 중인 책</div>
+          <div class="stat-val" id="stat-plan-count">0</div>
+          <div class="stat-sub">권</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">가장 빠른 마감</div>
+          <div class="stat-val" id="stat-deadline">—</div>
+          <div class="stat-sub" id="stat-deadline-book"></div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">완독 목표</div>
+          <div class="stat-val" id="stat-total-pages">0</div>
+          <div class="stat-sub">총 페이지</div>
+        </div>
+      </div>
+
+      <!-- 계획 추가 -->
+      <div class="add-panel">
+        <div class="add-panel-title">
+          새 독서 계획 추가
+          <button class="btn btn-ghost btn-sm" onclick="togglePanel('add-plan-form')">펼치기 ▼</button>
+        </div>
+        <div id="add-plan-form" class="hidden">
+          <div class="form-row">
+            <div class="form-group" style="flex:2">
+              <label>책 선택</label>
+              <select id="plan-book-select" onchange="onPlanBookSelect()">
+                <option value="">— 책을 선택하세요 —</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>마감일</label>
+              <input type="date" id="plan-deadline">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>현재 읽은 페이지</label>
+              <input type="number" id="plan-current-page" placeholder="0" min="0">
+            </div>
+          </div>
+          <div style="display:flex; justify-content:flex-end; gap:8px;">
+            <button class="btn btn-primary" onclick="addPlan()">계획 추가</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="plan-list"></div>
+    </div>
+
+    <!-- ===== 북킷리스트 ===== -->
+    <div class="section" id="section-wishlist">
+      <div class="page-title">북킷리스트</div>
+      <div class="page-sub">읽고 싶은 책을 모아두세요. 태그가 많을수록 우선순위가 높아요.</div>
+
+      <!-- 책 추가 패널 -->
+      <div class="add-panel">
+        <div class="add-panel-title">
+          책 추가
+          <button class="btn btn-ghost btn-sm" onclick="togglePanel('add-wish-form')">접기 ▲</button>
+        </div>
+        <div id="add-wish-form">
+          <!-- 검색 -->
+          <div class="form-group" style="margin-bottom:10px">
+            <label>제목으로 검색 (Google Books)</label>
+            <div class="search-wrap">
+              <input type="text" id="book-search-input" placeholder="책 제목 입력 후 Enter..." onkeydown="if(event.key==='Enter') searchBooks()" autocomplete="off">
+              <span class="search-icon">🔍</span>
+              <div class="search-results hidden" id="search-results"></div>
+            </div>
+          </div>
+
+          <div class="divider" style="margin: 12px 0"></div>
+
+          <!-- 선택된 책 or 직접입력 -->
+          <div id="book-form-fields">
+            <div class="form-row">
+              <div class="form-group" style="flex:2; position:relative">
+                <label>제목 *</label>
+                <input type="text" id="wish-title" placeholder="책 제목" autocomplete="off"
+                  oninput="showTitleDuplicates(this.value)"
+                  onblur="setTimeout(()=>hideAC('ac-title-dup'),150)">
+                <div id="ac-title-dup" class="ac-dropdown hidden"></div>
+              </div>
+              <div class="form-group">
+                <label>저자</label>
+                <input type="text" id="wish-author" placeholder="저자명">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>출판사</label>
+                <input type="text" id="wish-publisher" placeholder="출판사">
+              </div>
+              <div class="form-group">
+                <label>페이지 수</label>
+                <input type="number" id="wish-pages" placeholder="0" min="0">
+              </div>
+              <div class="form-group">
+                <label>매체</label>
+                <select id="wish-medium">
+                  <option value="">선택 안 함</option>
+                  <option value="paper">종이책</option>
+                  <option value="ebook">전자책</option>
+                  <option value="audio">오디오북</option>
+                </select>
+              </div>
+              <div class="form-group" style="position:relative">
+                <label>카테고리</label>
+                <div class="tag-input-wrap" style="position:relative">
+                  <input type="text" id="wish-category" placeholder="카테고리 입력 후 Enter" autocomplete="off"
+                    onkeydown="if(event.key==='Enter'){addWishCategory();event.preventDefault()}"
+                    oninput="showAC('wish-category','ac-category',getCategoryOptions)"
+                    onblur="setTimeout(()=>hideAC('ac-category'),150)"
+                    style="flex:1">
+                  <div id="ac-category" class="ac-dropdown hidden"></div>
+                  <button class="btn btn-sm" onclick="addWishCategory()">추가</button>
+                </div>
+                <div class="tags mt-1" id="wish-categories-preview"></div>
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:10px">
+              <label>태그 추가</label>
+              <div class="tag-input-wrap" style="position:relative">
+                <input type="text" id="wish-tag-input" placeholder="태그 입력 후 Enter" autocomplete="off"
+                  onkeydown="if(event.key==='Enter'){addWishTag();event.preventDefault()}"
+                  oninput="showAC('wish-tag-input','ac-tag',getTagOptions)"
+                  onblur="setTimeout(()=>hideAC('ac-tag'),150)"
+                  style="flex:1">
+                <div id="ac-tag" class="ac-dropdown hidden" style="left:0;right:40px"></div>
+                <button class="btn btn-sm" onclick="addWishTag()">추가</button>
+              </div>
+              <div class="tag-suggestions" id="tag-suggestions"></div>
+              <div class="tags mt-1" id="wish-tags-preview"></div>
+            </div>
+            <div class="form-group" style="margin-bottom:10px">
+              <label>표지 이미지 URL (선택)</label>
+              <div style="display:flex; gap:8px; align-items:center">
+                <input type="text" id="wish-cover" placeholder="https://..." autocomplete="off" oninput="previewCover(this.value)" style="flex:1">
+                <div id="cover-preview" style="width:36px; height:50px; border-radius:4px; background:var(--bg3); flex-shrink:0; overflow:hidden; display:flex; align-items:center; justify-content:center; font-size:18px; border:1px solid var(--border)">📚</div>
+              </div>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:8px;">
+              <button class="btn btn-ghost btn-sm" onclick="clearWishForm()">초기화</button>
+              <button class="btn btn-primary" onclick="addWishBook()">북킷리스트에 추가</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 필터 -->
+      <div class="filter-bar" style="margin-bottom:0.5rem">
+        <span style="font-size:11px;color:var(--text3);padding:5px 4px">태그</span>
+        <div id="wish-tag-filters" style="display:contents"></div>
+      </div>
+      <div class="filter-bar" style="margin-bottom:1rem">
+        <span style="font-size:11px;color:var(--text3);padding:5px 4px">카테고리</span>
+        <div id="wish-cat-filters" style="display:contents"></div>
+      </div>
+
+      <!-- 정렬 -->
+      <div class="sec-header">
+        <div class="sec-header-title" id="wish-count-label">0권</div>
+        <select onchange="sortWish(this.value)" style="font-size:12px; padding:4px 8px; width:auto">
+          <option value="priority">우선순위 (태그 많은 순)</option>
+          <option value="title">제목순</option>
+          <option value="pages">페이지 적은 순</option>
+          <option value="added">추가일 순</option>
+        </select>
+      </div>
+
+      <div id="wish-list"></div>
+    </div>
+
+    <!-- ===== 책장 ===== -->
+    <div class="section" id="section-shelf">
+      <div class="page-title">책장</div>
+      <div class="page-sub">독서 계획에서 읽기 시작하면 자동으로 여기 추가돼요</div>
+
+      <div class="filter-bar">
+        <button class="chip active" onclick="filterShelf('all', this)">전체</button>
+        <button class="chip" onclick="filterShelf('reading', this)">읽는 중</button>
+        <button class="chip" onclick="filterShelf('done', this)">완독</button>
+        <button class="chip" onclick="filterShelf('paused', this)">중단</button>
+      </div>
+
+      <div id="shelf-list"></div>
+    </div>
+
+    <!-- ===== 책장 메모 패널 (책 선택시 슬라이드) ===== -->
+    <div class="modal-overlay hidden" id="shelf-memo-panel">
+      <div class="modal" style="max-width:600px">
+        <div class="modal-title">
+          <span id="shelf-memo-book-title">메모</span>
+          <button class="icon-btn" onclick="closeShelfMemoPanel()">✕</button>
+        </div>
+        <!-- 새 메모 입력 -->
+        <div style="background:var(--bg2); border-radius:var(--radius-sm); padding:12px; margin-bottom:1rem;">
+          <div class="form-row" style="margin-bottom:8px">
+            <div class="form-group">
+              <label>페이지/진행률</label>
+              <input type="text" id="shelf-memo-page" placeholder="p. 또는 %">
+            </div>
+            <div class="form-group">
+              <label>분류</label>
+              <select id="shelf-memo-type-select" onchange="toggleShelfMemoQuote(this.value)">
+                <option value="memo">메모</option>
+                <option value="quote">발췌</option>
+              </select>
+            </div>
+            <div class="form-group" style="flex:2">
+              <label>작성일시</label>
+              <input type="datetime-local" id="shelf-memo-date">
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:8px">
+            <label id="shelf-memo-quote-label">발췌 (선택)</label>
+            <textarea id="shelf-memo-quote" placeholder="인상 깊은 문장..." style="min-height:60px"></textarea>
+          </div>
+          <div class="form-group" style="margin-bottom:8px">
+            <label>메모</label>
+            <textarea id="shelf-memo-content" placeholder="메모 또는 코멘트..." style="min-height:60px"></textarea>
+          </div>
+          <div style="display:flex; justify-content:flex-end">
+            <button class="btn btn-primary btn-sm" onclick="saveShelfMemo()">저장</button>
+          </div>
+        </div>
+                <!-- 이 책의 메모 목록 -->
+        <div id="shelf-memo-list"></div>
+      </div>
+    </div>
+
+    <!-- ===== 메모 ===== -->
+    <div class="section" id="section-memo">
+      <div class="page-title">메모</div>
+      <div class="page-sub">책을 읽으며 남긴 메모와 발췌를 모아보세요</div>
+
+      <div class="add-panel">
+        <div class="add-panel-title">
+          새 메모
+          <button class="btn btn-ghost btn-sm" onclick="togglePanel('add-memo-form')">접기 ▲</button>
+        </div>
+        <div id="add-memo-form">
+          <div class="form-row">
+            <div class="form-group" style="flex:2">
+              <label>책 선택 *</label>
+              <select id="memo-book-select">
+                <option value="">— 독서 계획에서 선택 —</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>페이지/진행률</label>
+              <input type="text" id="memo-page" placeholder="p. 또는 %">
+            </div>
+            <div class="form-group">
+              <label>분류</label>
+              <select id="memo-type-select" onchange="toggleMemoQuote(this.value)">
+                <option value="memo">메모</option>
+                <option value="quote">발췌</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>작성일시</label>
+              <input type="datetime-local" id="memo-date">
+            </div>
+          </div>
+          <div class="form-group" id="memo-quote-group" style="margin-bottom:8px">
+            <label id="memo-quote-label">발췌 내용</label>
+            <textarea id="memo-quote" placeholder="인상 깊은 문장을 그대로 옮겨보세요..." style="min-height:60px"></textarea>
+          </div>
+          <div class="form-group" style="margin-bottom:10px">
+            <label>메모</label>
+            <textarea id="memo-content" placeholder="생각, 느낌, 코멘트를 남겨보세요..."></textarea>
+          </div>
+          <div style="display:flex; justify-content:flex-end;">
+            <button class="btn btn-primary" onclick="addMemo()">저장</button>
+          </div>
+        </div>
+      </div>
+
+            <!-- 필터 바 -->
+      <div style="display:flex; gap:6px; margin-bottom:8px; align-items:center; overflow-x:auto">
+        <select id="memo-book-filter-select" onchange="setMemoBookFilter(this.value)" style="font-size:12px; padding:5px 8px; width:auto; border-radius:20px; flex-shrink:0">
+          <option value="all">전체 책</option>
+        </select>
+        <input type="date" id="memo-date-filter" onchange="setMemoDateFilter(this.value)" style="font-size:12px; padding:5px 6px; border-radius:20px; flex-shrink:0; width:130px" title="날짜 필터">
+        <button class="chip" onclick="clearMemoDateFilter()" style="font-size:11px;padding:4px 10px;flex-shrink:0">초기화</button>
+      </div>
+      <div style="display:flex; gap:6px; margin-bottom:1rem; align-items:center">
+        <div class="filter-bar" id="memo-type-filter" style="margin-bottom:0">
+          <button class="chip active" onclick="setMemoTypeFilter('all',this)">전체</button>
+          <button class="chip" onclick="setMemoTypeFilter('quote',this)">발췌만</button>
+          <button class="chip" onclick="setMemoTypeFilter('memo',this)">메모만</button>
+        </div>
+      </div>
+      <div id="memo-list"></div>
+    </div>
+
+    <!-- ===== 통계 ===== -->
+    <div class="section" id="section-stats">
+      <div class="page-title">통계</div>
+      <div class="page-sub" id="stats-sub">완독한 책 기준으로 집계해요</div>
+
+      <div class="stats-row" id="stats-summary" style="margin-bottom:2rem"></div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.5rem">
+        <div class="card">
+          <div class="sec-header-title" style="margin-bottom:1rem; font-size:13px; font-weight:600">카테고리 비율</div>
+          <canvas id="chart-category" height="200"></canvas>
+          <div id="chart-category-empty" class="hidden" style="text-align:center;padding:2rem;color:var(--text3);font-size:12px">데이터 없음</div>
+        </div>
+        <div class="card">
+          <div class="sec-header-title" style="margin-bottom:1rem; font-size:13px; font-weight:600">매체 비율</div>
+          <canvas id="chart-medium" height="200"></canvas>
+          <div id="chart-medium-empty" class="hidden" style="text-align:center;padding:2rem;color:var(--text3);font-size:12px">데이터 없음</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:1rem">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem">
+          <div style="font-size:13px; font-weight:600">월별 완독</div>
+          <select id="stats-year-select" onchange="renderStats()" style="font-size:12px;padding:4px 8px;width:auto">
+          </select>
+        </div>
+        <canvas id="chart-monthly" height="160"></canvas>
+        <div id="chart-monthly-empty" class="hidden" style="text-align:center;padding:2rem;color:var(--text3);font-size:12px">완독한 책이 없어요</div>
+      </div>
+
+      <div class="card">
+        <div style="font-size:13px; font-weight:600; margin-bottom:1rem">출판사별 완독</div>
+        <div id="stats-publisher-list"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- 북킷리스트 수정 모달 -->
+<div class="modal-overlay hidden" id="wish-edit-modal">
+  <div class="modal" style="max-width:540px">
+    <div class="modal-title">
+      책 정보 수정
+      <button class="icon-btn" onclick="closeWishEditModal()">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group" style="flex:2">
+        <label>제목 *</label>
+        <input type="text" id="edit-title" placeholder="책 제목">
+      </div>
+      <div class="form-group">
+        <label>저자</label>
+        <input type="text" id="edit-author" placeholder="저자명">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>출판사</label>
+        <input type="text" id="edit-publisher" placeholder="출판사">
+      </div>
+      <div class="form-group">
+        <label>페이지 수</label>
+        <input type="number" id="edit-pages" placeholder="0" min="0">
+      </div>
+      <div class="form-group">
+        <label>매체</label>
+        <select id="edit-medium">
+          <option value="">선택 안 함</option>
+          <option value="paper">종이책</option>
+          <option value="ebook">전자책</option>
+          <option value="audio">오디오북</option>
+        </select>
+      </div>
+      <div class="form-group" style="position:relative">
+        <label>카테고리</label>
+        <div class="tag-input-wrap" style="position:relative">
+          <input type="text" id="edit-category" placeholder="카테고리 입력 후 Enter" autocomplete="off"
+            onkeydown="if(event.key==='Enter'){addEditCategory();event.preventDefault()}"
+            oninput="showAC('edit-category','ac-edit-category',getCategoryOptions)"
+            onblur="setTimeout(()=>hideAC('ac-edit-category'),150)"
+            style="flex:1">
+          <div id="ac-edit-category" class="ac-dropdown hidden"></div>
+          <button class="btn btn-sm" onclick="addEditCategory()">추가</button>
+        </div>
+        <div class="tags mt-1" id="edit-categories-preview"></div>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:10px">
+      <label>표지 이미지 URL</label>
+      <div style="display:flex; gap:8px; align-items:center">
+        <input type="text" id="edit-cover" placeholder="https://..." autocomplete="off" oninput="previewEditCover(this.value)" style="flex:1">
+        <div id="edit-cover-preview" style="width:36px;height:50px;border-radius:4px;background:var(--bg3);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:18px;border:1px solid var(--border)">📚</div>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:10px">
+      <label>태그</label>
+      <div class="tags" id="edit-tags-preview" style="margin-bottom:6px"></div>
+      <div style="display:flex; gap:6px">
+        <input type="text" id="edit-tag-input" placeholder="태그 입력 후 Enter" autocomplete="off"
+          onkeydown="if(event.key==='Enter'){addEditTag();event.preventDefault()}" style="flex:1">
+        <button class="btn btn-sm" onclick="addEditTag()">추가</button>
+      </div>
+    </div>
+    <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:4px">
+      <button class="btn" onclick="closeWishEditModal()">취소</button>
+      <button class="btn btn-primary" onclick="saveWishEdit()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 독서 기록 그래프 모달 -->
+<div class="modal-overlay hidden" id="reading-chart-modal">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-title">
+      <span id="chart-book-title">독서 기록</span>
+      <button class="icon-btn" onclick="closeReadingChart()">✕</button>
+    </div>
+    <div id="chart-stats" style="display:flex; gap:12px; margin-bottom:1rem; flex-wrap:wrap"></div>
+    <canvas id="reading-chart" height="200" style="cursor:pointer"></canvas>
+    <div id="chart-empty" class="hidden" style="text-align:center; padding:3rem; color:var(--text3); font-size:13px">
+      아직 독서 기록이 없어요.<br>페이지를 기록하면 여기에 그래프가 나타나요.
+    </div>
+    <div style="margin-top:0.75rem; font-size:11px; color:var(--text3); text-align:center">막대를 클릭하면 해당 날짜 기록을 수정할 수 있어요</div>
+    <!-- 날짜 직접 추가 -->
+    <div style="margin-top:0.75rem; display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+      <input type="date" id="chart-add-date" style="font-size:12px; padding:4px 8px; border-radius:20px; flex:1; min-width:120px">
+      <button class="btn btn-sm" onclick="openChartAddDate()">이 날짜 기록 추가/수정</button>
+    </div>
+    <!-- 날짜 수정 패널 -->
+    <div id="chart-edit-panel" class="hidden" style="margin-top:1rem; background:var(--bg2); border-radius:var(--radius-sm); padding:12px">
+      <div style="font-size:13px; font-weight:600; margin-bottom:8px">
+        <span id="chart-edit-date"></span> 기록 수정
+      </div>
+      <div style="font-size:12px; color:var(--text2); margin-bottom:10px" id="chart-edit-desc"></div>
+      <div class="form-row" style="align-items:flex-end">
+        <div class="form-group" style="flex:1">
+          <label id="chart-edit-label">해당일 누적 페이지</label>
+          <input type="number" id="chart-edit-input" min="0" placeholder="0">
+        </div>
+        <div style="display:flex; gap:6px; padding-bottom:1px">
+          <button class="btn btn-sm" onclick="cancelChartEdit()">취소</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteChartDate()">삭제</button>
+          <button class="btn btn-primary btn-sm" onclick="saveChartEdit()">저장</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 메모 수정 모달 -->
+<div class="modal-overlay hidden" id="memo-edit-modal" style="z-index:500">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-title">메모 수정 <button class="icon-btn" onclick="closeMemoEditModal()">✕</button></div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>페이지</label>
+        <input type="number" id="medit-page" min="1" placeholder="p.">
+      </div>
+      <div class="form-group">
+        <label>분류</label>
+        <select id="medit-type" onchange="toggleMeditQuote(this.value)">
+          <option value="memo">메모</option>
+          <option value="quote">발췌</option>
+        </select>
+      </div>
+      <div class="form-group" style="flex:2">
+        <label>작성일시</label>
+        <input type="datetime-local" id="medit-date">
+      </div>
+    </div>
+    <div class="form-group" id="medit-quote-group" style="margin-bottom:8px">
+      <label id="medit-quote-label">발췌 내용</label>
+      <textarea id="medit-quote" placeholder="인상 깊은 문장..." style="min-height:60px"></textarea>
+    </div>
+    <div class="form-group" style="margin-bottom:1rem">
+      <label>메모</label>
+      <textarea id="medit-content" placeholder="메모/코멘트..."></textarea>
+    </div>
+    <div style="display:flex; gap:8px; justify-content:flex-end">
+      <button class="btn" onclick="closeMemoEditModal()">취소</button>
+      <button class="btn btn-primary" onclick="saveMemoEdit()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 책장 책 정보 수정 모달 -->
+<div class="modal-overlay hidden" id="shelf-book-info-modal">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-title">책 정보 수정 <button class="icon-btn" onclick="closeShelfBookInfoModal()">✕</button></div>
+    <div class="form-row">
+      <div class="form-group" style="flex:2">
+        <label>제목</label>
+        <input type="text" id="sbi-title" placeholder="책 제목">
+      </div>
+      <div class="form-group">
+        <label>저자</label>
+        <input type="text" id="sbi-author" placeholder="저자">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>출판사</label>
+        <input type="text" id="sbi-publisher" placeholder="출판사">
+      </div>
+      <div class="form-group">
+        <label>페이지 수</label>
+        <input type="number" id="sbi-pages" min="0" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label>매체</label>
+        <select id="sbi-medium">
+          <option value="">선택 안 함</option>
+          <option value="paper">종이책</option>
+          <option value="ebook">전자책</option>
+          <option value="audio">오디오북</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:10px">
+      <label>표지 URL</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="text" id="sbi-cover" placeholder="https://..." autocomplete="off" oninput="previewSbiCover(this.value)" style="flex:1">
+        <div id="sbi-cover-preview" style="width:36px;height:50px;border-radius:4px;background:var(--bg3);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:18px;border:1px solid var(--border)">📚</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn" onclick="closeShelfBookInfoModal()">취소</button>
+      <button class="btn btn-primary" onclick="saveShelfBookInfo()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 독서 계획 수정 모달 -->
+<div class="modal-overlay hidden" id="plan-edit-modal">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-title">독서 계획 수정 <button class="icon-btn" onclick="closePlanEditModal()">✕</button></div>
+    <div style="font-size:14px; font-weight:600; margin-bottom:1rem" id="plan-edit-title"></div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>마감일</label>
+        <input type="date" id="plan-edit-deadline">
+      </div>
+      <div class="form-group">
+        <label>총 페이지</label>
+        <input type="number" id="plan-edit-pages" min="1" placeholder="0">
+      </div>
+    </div>
+    <div style="font-size:12px; color:var(--text3); margin-bottom:1rem">저장하면 하루 할당량이 자동으로 재계산돼요.</div>
+    <div style="display:flex; gap:8px; justify-content:flex-end">
+      <button class="btn" onclick="closePlanEditModal()">취소</button>
+      <button class="btn btn-primary" onclick="savePlanEdit()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 전자책 진행률 입력 모달 -->
+<div class="modal-overlay hidden" id="ebook-progress-modal">
+  <div class="modal" style="max-width:320px">
+    <div class="modal-title">
+      <span id="ebook-modal-title">진행률 업데이트</span>
+      <button class="icon-btn" onclick="closeEbookModal()">✕</button>
+    </div>
+    <div style="font-size:13px; color:var(--text2); margin-bottom:1rem" id="ebook-modal-sub"></div>
+    <div class="form-group" style="margin-bottom:1rem">
+      <label>진행률 (%)</label>
+      <input type="number" id="ebook-pct-input" min="0" max="100" step="1" placeholder="0~100">
+    </div>
+    <div style="display:flex; gap:8px; justify-content:flex-end">
+      <button class="btn" onclick="closeEbookModal()">취소</button>
+      <button class="btn btn-primary" onclick="saveEbookProgress()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 페이지 입력 모달 -->
+<div class="modal-overlay hidden" id="page-input-modal">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-title" id="page-input-title">진행 페이지 입력</div>
+    <div style="font-size:12px; color:var(--text2); margin-bottom:12px" id="page-input-sub"></div>
+    <div class="form-group" style="margin-bottom:1rem">
+      <label>오늘까지 읽은 페이지</label>
+      <input type="number" id="page-input-val" min="0" autocomplete="off">
+    </div>
+    <div style="display:flex; gap:8px; justify-content:flex-end">
+      <button class="btn" onclick="closePageInputModal()">취소</button>
+      <button class="btn btn-primary" onclick="confirmPageInput()">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- 완독 기록 모달 -->
+<div class="modal-overlay hidden" id="done-modal">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-title">완독을 축하해요!</div>
+    <div id="done-book-title" style="font-size:15px; font-weight:600; margin-bottom:1rem"></div>
+    <div class="form-group" style="margin-bottom:10px">
+      <label>별점</label>
+      <div id="done-stars" style="display:flex; gap:6px; margin-top:6px; flex-wrap:wrap">
+        <button class="btn btn-sm" id="star-btn-5" onclick="selectDoneStar(5)">★★★★★</button>
+        <button class="btn btn-sm" id="star-btn-4" onclick="selectDoneStar(4)">★★★★☆</button>
+        <button class="btn btn-sm" id="star-btn-3" onclick="selectDoneStar(3)">★★★☆☆</button>
+        <button class="btn btn-sm" id="star-btn-2" onclick="selectDoneStar(2)">★★☆☆☆</button>
+        <button class="btn btn-sm" id="star-btn-1" onclick="selectDoneStar(1)">★☆☆☆☆</button>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:1rem">
+      <label>한줄평 (선택)</label>
+      <input type="text" id="done-review" placeholder="이 책을 한 마디로 표현한다면..." autocomplete="off">
+    </div>
+    <div style="display:flex; gap:8px; justify-content:flex-end">
+      <button class="btn" onclick="saveDoneModal(false)">건너뛰기</button>
+      <button class="btn btn-primary" onclick="saveDoneModal(true)">저장하고 완독 처리</button>
+    </div>
+  </div>
+</div>
+
+<!-- 독서 계획 삭제 확인 모달 -->
+<div class="modal-overlay hidden" id="plan-delete-modal">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-title">계획 삭제</div>
+    <div id="plan-delete-title" style="font-size:15px;font-weight:600;margin-bottom:0.5rem"></div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:1.5rem">독서 계획에서만 삭제됩니다. 책장의 책은 그대로 남습니다.</div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn" onclick="closePlanDeleteModal()">취소</button>
+      <button class="btn btn-danger" onclick="confirmDeletePlan()">삭제</button>
+    </div>
+  </div>
+</div>
+
+<!-- 완독 확인 모달 -->
+<div class="modal-overlay hidden" id="ebook-done-modal">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-title">완독 처리</div>
+    <div id="ebook-done-title" style="font-size:15px;font-weight:600;margin-bottom:0.5rem"></div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:1rem">완독으로 처리할까요?</div>
+    <div id="ebook-done-plan-row" class="hidden">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:8px">독서 계획에서도 제거할까요?</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-sm" style="flex:1" onclick="confirmEbookDone(false)">계획 유지</button>
+        <button class="btn btn-sm btn-primary" style="flex:1" onclick="confirmEbookDone(true)">계획도 제거</button>
+      </div>
+    </div>
+    <div id="ebook-done-simple-row" style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn" onclick="closeEbookDoneModal()">취소</button>
+      <button class="btn btn-primary" onclick="confirmEbookDone(false)">완독 처리</button>
+    </div>
+  </div>
+</div>
+
+<!-- 독서 기록 날짜 삭제 확인 모달 -->
+<div class="modal-overlay hidden" id="chart-delete-modal">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-title">기록 삭제</div>
+    <div id="chart-delete-title" style="font-size:15px;font-weight:600;margin-bottom:0.5rem"></div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:1.5rem">이 날짜의 독서 기록을 삭제할까요?</div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn" onclick="closeChartDeleteModal()">취소</button>
+      <button class="btn btn-danger" onclick="confirmDeleteChartDate()">삭제</button>
+    </div>
+  </div>
+</div>
+
+<!-- 책장 수정 모달 -->
+<div class="modal-overlay hidden" id="shelf-edit-modal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-title">책장 수정 <button class="icon-btn" onclick="closeShelfEditModal()">✕</button></div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>상태</label>
+        <select id="sedit-status">
+          <option value="reading">읽는 중</option>
+          <option value="done">완독</option>
+          <option value="paused">중단</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label id="sedit-page-label">현재 페이지</label>
+        <input type="number" id="sedit-current" min="0">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>시작일</label>
+        <input type="date" id="sedit-start">
+      </div>
+      <div class="form-group">
+        <label>완독일</label>
+        <input type="date" id="sedit-end">
+      </div>
+    </div>
+    <div class="form-row" style="margin-bottom:10px">
+      <div class="form-group">
+        <label>별점</label>
+        <select id="sedit-rating">
+          <option value="">—</option>
+          <option value="5">★★★★★</option>
+          <option value="4">★★★★☆</option>
+          <option value="3">★★★☆☆</option>
+          <option value="2">★★☆☆☆</option>
+          <option value="1">★☆☆☆☆</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>매체</label>
+        <select id="sedit-medium">
+          <option value="">선택 안 함</option>
+          <option value="paper">종이책</option>
+          <option value="ebook">전자책</option>
+          <option value="audio">오디오북</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:1rem">
+      <label>한줄평</label>
+      <input type="text" id="sedit-review" placeholder="한줄평" autocomplete="off">
+    </div>
+    <div style="display:flex; gap:8px; justify-content:flex-end">
+      <button class="btn" onclick="closeShelfEditModal()">취소</button>
+      <button class="btn btn-primary" onclick="saveShelfEdit()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase 설정 안내 모달 -->
+<div class="modal-overlay hidden" id="firebase-modal">
+  <div class="modal">
+    <div class="modal-title">
+      Firebase 연동 설정
+      <button class="icon-btn" onclick="closeFirebaseModal()">✕</button>
+    </div>
+    <div style="font-size:13px; color:var(--text2); margin-bottom:1rem; line-height:1.7">
+      Firebase config를 입력하면 모든 기기에서 데이터가 동기화돼요.
+    </div>
+    <div class="form-group" style="margin-bottom:10px">
+      <label>Firebase Config (JSON)</label>
+      <textarea id="firebase-config-input" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","storageBucket":"...","messagingSenderId":"...","appId":"..."}' style="min-height:120px; font-family: monospace; font-size:12px;"></textarea>
+    </div>
+    <div style="background:var(--bg2); border-radius:var(--radius-sm); padding:12px; margin-bottom:1rem; font-size:12px; color:var(--text2); line-height:1.8">
+      <b style="color:var(--text)">설정 방법:</b><br>
+      1. <a href="https://console.firebase.google.com" target="_blank" style="color:#1a73e8">console.firebase.google.com</a> 접속<br>
+      2. 새 프로젝트 생성 (무료)<br>
+      3. 웹 앱 추가 → Config 복사<br>
+      4. Firestore Database 생성 (테스트 모드)<br>
+      5. 위에 붙여넣기 후 저장
+    </div>
+    <div style="display:flex; gap:8px; justify-content:flex-end;">
+      <button class="btn" onclick="closeFirebaseModal()">나중에</button>
+      <button class="btn btn-primary" onclick="saveFirebaseConfig()">저장 및 연동</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+<script type="module">
+// ==================== FIREBASE ====================
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBQF2t6hzHod0aTIwm9BM-Muh-K5mqgAFU",
+  authDomain: "booklog-490911.firebaseapp.com",
+  projectId: "booklog-490911",
+  storageBucket: "booklog-490911.firebasestorage.app",
+  messagingSenderId: "415768662365",
+  appId: "1:415768662365:web:ae0e304754523976b598b4"
+};
+
+try {
+  const el = document.getElementById('firebase-status');
+  const firebaseApp = initializeApp(firebaseConfig);
+  const firestore = getFirestore(firebaseApp);
+  const DATA_DOC = doc(firestore, 'booklog', 'data');
+
+  // 저장 큐 - 최신 데이터만 유지
+  let _pendingSave = null;
+  let _saveInProgress = false;
+  let _retryTimer = null;
+
+  async function _doSave(data) {
+    _saveInProgress = true;
+    if (el) el.textContent = '🔄 저장 중...';
+    try {
+      await setDoc(DATA_DOC, { payload: JSON.stringify(data) });
+      _pendingSave = null;
+      _saveInProgress = false;
+      if (el) el.textContent = '🟢 동기화됨';
+      if (window.showToast) showToast('☁️ 저장 완료');
+    } catch(e) {
+      _saveInProgress = false;
+      if (el) el.textContent = '🔴 미저장 — 재시도 중';
+      if (window.showToast) showToast('⚠️ 저장 실패 — 재시도 중', 3500);
+      if (_retryTimer) clearTimeout(_retryTimer);
+      _retryTimer = setTimeout(() => {
+        if (_pendingSave) _doSave(_pendingSave);
+      }, 5000);
+    }
+  }
+
+  window.firebaseSave = function(data) {
+    _pendingSave = data;
+    if (!_saveInProgress) return _doSave(data);
+    return Promise.resolve();
+  };
+
+  // 사파리 탭 숨김/종료 시 미저장 데이터 즉시 시도
+  // keepalive fetch: 사파리가 페이지를 닫아도 브라우저가 요청을 완료시켜줌
+  const FIREBASE_REST_URL = 'https://firestore.googleapis.com/v1/projects/' + firebaseConfig.projectId + '/databases/(default)/documents/booklog/data';
+
+  function _saveWithKeepalive(data) {
+    const payload = JSON.stringify({
+      fields: { payload: { stringValue: JSON.stringify(data) } }
+    });
+    try {
+      fetch(FIREBASE_REST_URL + '?key=' + firebaseConfig.apiKey, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload,
+        keepalive: true
+      }).catch(function() {});
+    } catch(e) {}
+  }
+
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'hidden') {
+      if (_pendingSave && !_saveInProgress) _doSave(_pendingSave);
+      if (window._lastSavedDb) _saveWithKeepalive(window._lastSavedDb);
+    }
+  });
+  window.addEventListener('pagehide', function() {
+    if (_pendingSave && !_saveInProgress) _doSave(_pendingSave);
+    if (window._lastSavedDb) _saveWithKeepalive(window._lastSavedDb);
+  });
+  window.addEventListener('beforeunload', function() {
+    if (window._lastSavedDb) _saveWithKeepalive(window._lastSavedDb);
+  });
+
+  const snap = await getDoc(DATA_DOC);
+  if (snap.exists()) {
+    const cloudData = JSON.parse(snap.data().payload);
+    const localRaw = localStorage.getItem('booklog_data');
+    if (localRaw) {
+      try {
+        const localData = JSON.parse(localRaw);
+        const getLatestTs = (data) => {
+          const all = [
+            data._savedAt || '',
+            ...(data.shelf || []).map(b => b.updatedAt || b.addedAt || ''),
+            ...(data.plans || []).map(p => p.addedAt || ''),
+            ...(data.memos || []).map(m => m.createdAt || ''),
+          ].filter(Boolean);
+          // readingLog의 날짜 키도 포함 (YYYY-MM-DD 형식이므로 _savedAt과 직접 비교 불가 → ISO로 변환)
+          try {
+            Object.values(data.readingLog || {}).forEach(dayMap => {
+              const days = Object.keys(dayMap || {}).sort();
+              if (days.length) {
+                // 가장 최근 날짜를 당일 끝시각(23:59:59)으로 변환해서 비교
+                all.push(days[days.length-1] + 'T23:59:59.000Z');
+              }
+            });
+          } catch(e) {}
+          return all.length ? all.sort().pop() : '';
+        };
+        const cloudTs = getLatestTs(cloudData);
+        const localTs = getLatestTs(localData);
+        if (localTs > cloudTs) {
+          window._cloudData = localData;
+          window._needsUpload = true;
+        } else {
+          window._cloudData = cloudData;
+        }
+      } catch(e) {
+        window._cloudData = cloudData;
+      }
+    } else {
+      window._cloudData = cloudData;
+    }
+  }
+  if (el) el.textContent = '🟢 연결됨';
+} catch(e) {
+  console.error('[Booklog Firebase]', e.code, e.message, e);
+  const _statusEl = document.getElementById('firebase-status');
+  if (_statusEl) _statusEl.textContent = '🔴 연결 실패';
+}
+
+// 앱 초기화 신호
+window._firebaseReady = true;
+if (window._waitingForFirebase) window._waitingForFirebase();
+</script>
+
+<script>
+// ==================== DATA STORE ====================
+let db = {
+  wishlist: [],
+  shelf: [],
+  plans: [],
+  memos: [],
+  readingLog: {}  // { shelfBookId: { "2026-03-22": 누적페이지, ... } }
+};
+
+let tempWishTags = [];
+let tempWishCategories = [];
+let editCategories = [];
+let wishSortMode = 'priority';
+let wishFilterTag = 'all';
+let wishFilterCat = 'all';
+let shelfFilter = 'all';
+let memoFilter = 'all';
+let memoDateFilter = '';
+
+function localDateStr(isoStr) {
+  // ISO 문자열을 로컬 시간 기준 YYYY-MM-DD로 변환
+  const d = new Date(isoStr);
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${dd}`;
+}
+
+// ==================== STORAGE ====================
+function save() {
+  db._savedAt = new Date().toISOString();
+  const serialized = JSON.stringify(db);
+  localStorage.setItem('booklog_data', serialized);
+  window._lastSavedDb = db; // keepalive 백업용
+  updateBadges();
+  if (window.firebaseSave) window.firebaseSave(db);
+}
+
+function load() {
+  const cloudData = window._cloudData;
+  if (cloudData) {
+    db = cloudData;
+    window._cloudData = null;
+    localStorage.setItem('booklog_data', JSON.stringify(db));
+    if (window._needsUpload) {
+      window._needsUpload = false;
+      if (window.firebaseSave) window.firebaseSave(db);
+    }
+  } else {
+    const raw = localStorage.getItem('booklog_data');
+    if (raw) { try { db = JSON.parse(raw); } catch(e) {} }
+  }
+  if (!db.readingLog) db.readingLog = {};
+  db.wishlist.forEach(b => {
+    if (!b.categories) { b.categories = b.category ? [b.category] : []; delete b.category; }
+  });
+  db.shelf.forEach(b => {
+    if (!b.categories) { b.categories = b.category ? [b.category] : []; delete b.category; }
+  });
+  refreshDailyAlloc();
+  updateBadges();
+  renderAll();
+}
+
+function updateBadges() {
+  document.getElementById('badge-wish').textContent = db.wishlist.length;
+  document.getElementById('badge-shelf').textContent = db.shelf.length;
+  document.getElementById('badge-plan').textContent = db.plans.length;
+}
+
+// ==================== NAV ====================
+function showSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('section-' + name).classList.add('active');
+  const navMap = {plan:0, wishlist:1, shelf:2, memo:3, stats:4};
+  const navItems = document.querySelectorAll('.nav-item');
+  if (navMap[name] !== undefined) navItems[navMap[name]].classList.add('active');
+  if (name === 'plan') renderPlan();
+  if (name === 'wishlist') renderWishlist();
+  if (name === 'shelf') renderShelf();
+  if (name === 'memo') { populateMemoBookSelect(); renderMemos(); }
+  if (name === 'stats') renderStats();
+}
+
+function togglePanel(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('hidden');
+  const isHidden = el.classList.contains('hidden');
+  // 버튼 찾아서 텍스트 변경
+  const btn = el.previousElementSibling?.querySelector('button[onclick*="togglePanel"]')
+    || el.parentElement?.querySelector('button[onclick*="togglePanel"]');
+  if (btn) btn.textContent = isHidden ? '펼치기 ▼' : '접기 ▲';
+}
+
+// ==================== GOOGLE BOOKS SEARCH ====================
+let searchTimeout = null;
+
+document.getElementById('book-search-input').addEventListener('input', function() {
+  clearTimeout(searchTimeout);
+  if (this.value.length < 2) {
+    document.getElementById('search-results').classList.add('hidden');
+    return;
+  }
+  searchTimeout = setTimeout(() => searchBooks(), 600);
+});
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.search-wrap')) {
+    document.getElementById('search-results').classList.add('hidden');
+  }
+});
+
+async function searchBooks() {
+  const q = document.getElementById('book-search-input').value.trim();
+  if (!q) return;
+  const resultsEl = document.getElementById('search-results');
+  resultsEl.innerHTML = '<div style="padding:12px; color:var(--text3); font-size:12px">검색 중...</div>';
+  resultsEl.classList.remove('hidden');
+  try {
+    const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&langRestrict=ko&maxResults=8&printType=books&key=AIzaSyDipDvaoxk98o30f3-NZzZmX8cCD4ZSvxU`);
+    const data = await res.json();
+    if (!data.items || data.items.length === 0) {
+      resultsEl.innerHTML = '<div style="padding:12px; color:var(--text3); font-size:12px">결과가 없어요</div>';
+      return;
+    }
+    resultsEl.innerHTML = '';
+    resultsEl.innerHTML = data.items.map(item => {
+      const info = item.volumeInfo;
+      const title = info.title || '제목 없음';
+      const author = (info.authors || []).join(', ') || '저자 미상';
+      const cover = info.imageLinks?.thumbnail || '';
+      const pages = info.pageCount || '';
+      const publisher = info.publisher || '';
+      const category = (info.categories || []).join(', ');
+      const inWishlist = db.wishlist.some(b => b.title === title);
+      return `<div class="search-result-item" onclick='selectSearchResult(${JSON.stringify({title, author, cover, pages, publisher, category})})'>
+        ${cover ? `<img class="sri-cover" src="${cover}" onerror="this.style.display='none'">` : '<div class="sri-cover" style="background:var(--bg3)"></div>'}
+        <div class="sri-info">
+          <div class="sri-title">${title}</div>
+          <div class="sri-author">${author} ${pages ? '· ' + pages + 'p' : ''}</div>
+        </div>
+        ${inWishlist ? '<span class="sri-badge">목록에 있음</span>' : ''}
+      </div>`;
+    }).join('');
+  } catch(e) {
+    resultsEl.innerHTML = '<div style="padding:12px; color:var(--text3); font-size:12px">검색 오류. 직접 입력해주세요.</div>';
+  }
+}
+
+function selectSearchResult(info) {
+  document.getElementById('wish-title').value = info.title;
+  document.getElementById('wish-author').value = info.author;
+  document.getElementById('wish-publisher').value = info.publisher;
+  document.getElementById('wish-pages').value = info.pages || '';
+  document.getElementById('wish-cover').value = info.cover;
+  previewCover(info.cover || '');
+  // 카테고리 자동 입력
+  if (info.category) {
+    tempWishCategories = info.category.split(/[,/]/).map(c => c.trim()).filter(Boolean);
+    renderWishCategoriesPreview();
+  }
+  document.getElementById('book-search-input').value = '';
+  const resultsEl = document.getElementById('search-results');
+  resultsEl.classList.add('hidden');
+  resultsEl.innerHTML = '';
+  const existing = db.wishlist.find(b => b.title === info.title);
+  if (existing) showTagOnlyBanner(existing);
+}
+
+// ==================== WISH TAGS ====================
+function addWishTag() {
+  const input = document.getElementById('wish-tag-input');
+  const val = input.value.trim();
+  if (!val) return;
+  if (!tempWishTags.includes(val)) {
+    tempWishTags.push(val);
+    renderWishTagsPreview();
+  }
+  input.value = '';
+}
+
+function addWishTagByName(name) {
+  if (!tempWishTags.includes(name)) {
+    tempWishTags.push(name);
+    renderWishTagsPreview();
+  }
+}
+
+function renderWishTagsPreview() {
+  const el = document.getElementById('wish-tags-preview');
+  el.innerHTML = tempWishTags.map((t, i) =>
+    `<span class="tag">${t} <span class="tag-remove" onclick="removeWishTag(${i})">✕</span></span>`
+  ).join('');
+}
+
+function removeWishTag(i) {
+  tempWishTags.splice(i, 1);
+  renderWishTagsPreview();
+}
+
+function previewCover(url) {
+  const el = document.getElementById('cover-preview');
+  if (!url) { el.innerHTML = '📚'; return; }
+  el.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML='❌'">`;
+}
+
+function clearWishForm() {
+  ['wish-title','wish-author','wish-publisher','wish-cover'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('wish-pages').value = '';
+  document.getElementById('wish-medium').value = '';
+  document.getElementById('wish-category').value = '';
+  document.getElementById('wish-pages').value = '';
+  document.getElementById('book-search-input').value = '';
+  document.getElementById('cover-preview').innerHTML = '📚';
+  dismissTagOnlyBanner();
+  tempWishTags = [];
+  tempWishCategories = [];
+  renderWishTagsPreview();
+  renderWishCategoriesPreview();
+}
+
+// ==================== ADD WISH BOOK ====================
+function addWishBook() {
+  const title = document.getElementById('wish-title').value.trim();
+  if (!title) { alert('제목을 입력해주세요'); return; }
+
+  // 입력창에 남아있는 카테고리도 포함
+  const pendingCat = document.getElementById('wish-category').value.trim();
+  if (pendingCat && !tempWishCategories.includes(pendingCat)) {
+    tempWishCategories.push(pendingCat);
+    document.getElementById('wish-category').value = '';
+  }
+
+  // 입력창에 남아있는 태그도 자동으로 포함
+  const pendingTag = document.getElementById('wish-tag-input').value.trim();
+  if (pendingTag && !tempWishTags.includes(pendingTag)) {
+    tempWishTags.push(pendingTag);
+    document.getElementById('wish-tag-input').value = '';
+  }
+
+  const author = document.getElementById('wish-author').value.trim();
+  const publisher = document.getElementById('wish-publisher').value.trim();
+  const pages = parseInt(document.getElementById('wish-pages').value) || 0;
+  const existing = db.wishlist.find(b =>
+    b.title === title &&
+    b.author === author &&
+    b.publisher === publisher &&
+    b.pages === pages
+  );
+  if (existing) {
+    const newTags = tempWishTags.filter(t => !existing.tags.includes(t));
+    existing.tags = [...existing.tags, ...newTags];
+    save(); renderWishlist(); clearWishForm(); renderRecentTagSuggestions();
+    alert(`"${title}"에 태그가 추가됐어요.`);
+    return;
+  }
+
+  const book = {
+    id: Date.now().toString(),
+    title, author, publisher, pages,
+    categories: [...tempWishCategories],
+    medium: document.getElementById('wish-medium').value,
+    cover: document.getElementById('wish-cover').value,
+    tags: [...tempWishTags],
+    addedAt: new Date().toISOString()
+  };
+  db.wishlist.push(book);
+  save(); renderWishlist(); clearWishForm(); renderRecentTagSuggestions();
+}
+
+// ==================== RENDER WISHLIST ====================
+function getPriority(book) { return book.tags.length; }
+
+function filterWishTag(tag, el) {
+  wishFilterTag = tag;
+  document.querySelectorAll('#wish-tag-filters .chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderWishlist();
+}
+
+function filterWishCat(cat, el) {
+  wishFilterCat = cat;
+  document.querySelectorAll('#wish-cat-filters .chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderWishlist();
+}
+
+// 하위 호환성 유지
+function filterWish(tag, el) { filterWishTag(tag, el); }
+
+function sortWish(val) {
+  wishSortMode = val;
+  renderWishlist();
+}
+
+function renderWishlist() {
+  let list = [...db.wishlist];
+
+  if (wishFilterTag !== 'all') list = list.filter(b => b.tags.includes(wishFilterTag));
+  if (wishFilterCat !== 'all') list = list.filter(b => (b.categories||[]).includes(wishFilterCat));
+
+  if (wishSortMode === 'priority') list.sort((a,b) => {
+    const tagDiff = getPriority(b) - getPriority(a);
+    if (tagDiff !== 0) return tagDiff;
+    const pageDiff = (a.pages || 9999) - (b.pages || 9999);
+    if (pageDiff !== 0) return pageDiff;
+    return new Date(a.addedAt) - new Date(b.addedAt);
+  });
+  else if (wishSortMode === 'title') list.sort((a,b) => a.title.localeCompare(b.title));
+  else if (wishSortMode === 'pages') list.sort((a,b) => (a.pages||9999) - (b.pages||9999));
+  else if (wishSortMode === 'added') list.sort((a,b) => new Date(b.addedAt) - new Date(a.addedAt));
+
+  // 태그 필터 버튼
+  const allTags = [...new Set(db.wishlist.flatMap(b => b.tags))];
+  document.getElementById('wish-tag-filters').innerHTML =
+    `<button class="chip ${wishFilterTag==='all'?'active':''}" onclick="filterWishTag('all',this)">전체</button>` +
+    allTags.map(t => `<button class="chip ${wishFilterTag===t?'active':''}" onclick="filterWishTag('${t}',this)">${t}</button>`).join('');
+
+  // 카테고리 필터 버튼
+  const allCats = [...new Set(db.wishlist.flatMap(b => b.categories||[]))];
+  document.getElementById('wish-cat-filters').innerHTML =
+    `<button class="chip ${wishFilterCat==='all'?'active':''}" onclick="filterWishCat('all',this)">전체</button>` +
+    allCats.map(c => `<button class="chip ${wishFilterCat===c?'active':''}" onclick="filterWishCat('${c}',this)">${c}</button>`).join('');
+
+  document.getElementById('wish-count-label').textContent = list.length + '권';
+
+  const el = document.getElementById('wish-list');
+  if (list.length === 0) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">🔖</div><div class="empty-text">북킷리스트가 비어있어요<br>관심 가는 책을 추가해보세요</div></div>`;
+    return;
+  }
+
+  el.innerHTML = list.map((book, idx) => {
+    const pri = getPriority(book);
+    const priClass = pri >= 3 ? 'pri-high' : pri >= 1 ? 'pri-mid' : 'pri-low';
+    const priLabel = pri >= 3 ? '높음' : pri >= 1 ? '보통' : '낮음';
+    return `<div class="card">
+      <div class="card-header">
+        <div class="book-cover">
+          ${book.cover ? `<img src="${book.cover}" onerror="this.parentElement.textContent='📚'">` : '📚'}
+        </div>
+        <div class="book-main">
+          <div class="book-title">${book.title}</div>
+          <div class="book-author">${book.author || '저자 미상'}${book.publisher ? ' · ' + book.publisher : ''}${book.categories && book.categories.length ? ' · ' + book.categories.join(', ') : ''}</div>
+          <div class="book-pages">${book.pages ? book.pages + 'p' : ''}${book.addedAt ? ' · 추가 ' + localDateStr(book.addedAt) : ''}</div>
+          <div class="tags">
+            ${book.tags.map((t,i) => `<span class="tag">${t} <span class="tag-remove" onclick="removeWishBookTag('${book.id}',${i})">✕</span></span>`).join('')}
+            <span class="priority-badge ${priClass}">우선순위 ${priLabel}</span>
+          </div>
+        </div>
+        <div class="book-actions">
+          <button class="icon-btn" title="수정" onclick="openWishEditModal('${book.id}')">✏️</button>
+          <button class="icon-btn" title="독서 계획에 추가" onclick="quickAddToPlan('${book.id}')">📅</button>
+          <button class="icon-btn" title="책장으로 이동" onclick="moveToShelf('${book.id}')">📖</button>
+          <button class="icon-btn btn-danger" title="삭제" onclick="deleteWish('${book.id}')">✕</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ==================== 북킷리스트 수정 ====================
+let editingWishId = null;
+let editTags = [];
+
+function openWishEditModal(id) {
+  const book = db.wishlist.find(b => b.id === id);
+  if (!book) return;
+  editingWishId = id;
+  editTags = [...(book.tags || [])];
+  editCategories = [...(book.categories || [])];
+  document.getElementById('edit-title').value = book.title || '';
+  document.getElementById('edit-author').value = book.author || '';
+  document.getElementById('edit-publisher').value = book.publisher || '';
+  document.getElementById('edit-pages').value = book.pages || '';
+  document.getElementById('edit-medium').value = book.medium || '';
+  document.getElementById('edit-category').value = '';
+  document.getElementById('edit-cover').value = book.cover || '';
+  previewEditCover(book.cover || '');
+  renderEditTags();
+  renderEditCategories();
+  document.getElementById('wish-edit-modal').classList.remove('hidden');
+}
+
+function closeWishEditModal() {
+  document.getElementById('wish-edit-modal').classList.add('hidden');
+  editingWishId = null;
+  editTags = [];
+}
+
+function previewEditCover(url) {
+  const el = document.getElementById('edit-cover-preview');
+  if (!url) { el.innerHTML = '📚'; return; }
+  el.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML='❌'">`;
+}
+
+function renderEditTags() {
+  document.getElementById('edit-tags-preview').innerHTML = editTags.map((t, i) =>
+    `<span class="tag">${t} <span class="tag-remove" onclick="removeEditTag(${i})">✕</span></span>`
+  ).join('');
+}
+
+function removeEditTag(i) {
+  editTags.splice(i, 1);
+  renderEditTags();
+}
+
+function addEditTag() {
+  const input = document.getElementById('edit-tag-input');
+  const val = input.value.trim();
+  if (val && !editTags.includes(val)) { editTags.push(val); renderEditTags(); }
+  input.value = '';
+}
+
+function saveWishEdit() {
+  const pendingCat = document.getElementById('edit-category').value.trim();
+  if (pendingCat && !editCategories.includes(pendingCat)) editCategories.push(pendingCat);
+  const pendingTag = document.getElementById('edit-tag-input').value.trim();
+  if (pendingTag && !editTags.includes(pendingTag)) editTags.push(pendingTag);
+  const title = document.getElementById('edit-title').value.trim();
+  if (!title) { alert('제목을 입력해주세요'); return; }
+  const book = db.wishlist.find(b => b.id === editingWishId);
+  if (!book) return;
+  book.title = title;
+  book.author = document.getElementById('edit-author').value.trim();
+  book.publisher = document.getElementById('edit-publisher').value.trim();
+  book.pages = parseInt(document.getElementById('edit-pages').value) || 0;
+  book.medium = document.getElementById('edit-medium').value;
+  book.categories = [...editCategories];
+  book.cover = document.getElementById('edit-cover').value.trim();
+  book.tags = [...editTags];
+  closeWishEditModal();
+  save(); renderWishlist(); renderRecentTagSuggestions();
+}
+
+// 모달 외부 클릭시 닫기
+document.getElementById('wish-edit-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeWishEditModal();
+});
+
+function removeWishBookTag(id, idx) {
+  const book = db.wishlist.find(b => b.id === id);
+  if (book) { book.tags.splice(idx, 1); save(); renderWishlist(); }
+}
+
+function deleteWish(id) {
+  if (!confirm('북킷리스트에서 삭제할까요?')) return;
+  db.wishlist = db.wishlist.filter(b => b.id !== id);
+  save(); renderWishlist();
+}
+
+function moveToShelf(id) {
+  const book = db.wishlist.find(b => b.id === id);
+  if (!book) return;
+  const shelf = {
+    id: Date.now().toString(),
+    title: book.title, author: book.author, publisher: book.publisher,
+    pages: book.pages, cover: book.cover, categories: book.categories || [],
+    medium: book.medium || '',
+    status: 'reading', currentPage: 0, rating: '', review: '',
+    startDate: new Date().toISOString().split('T')[0], endDate: '', addedAt: new Date().toISOString()
+  };
+  db.shelf.push(shelf);
+  db.wishlist = db.wishlist.filter(b => b.id !== id);
+  save(); renderWishlist();
+  alert(`"${book.title}"을 책장으로 옮겼어요. (읽는 중)`);
+}
+
+function quickAddToPlan(wishId) {
+  const book = db.wishlist.find(b => b.id === wishId);
+  if (!book) return;
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('section-plan').classList.add('active');
+  document.querySelectorAll('.nav-item')[0].classList.add('active');
+  document.getElementById('add-plan-form').classList.remove('hidden');
+  const toggleBtn = document.querySelector('button[onclick*="add-plan-form"]');
+  if (toggleBtn) toggleBtn.textContent = '접기 ▲';
+  setTimeout(() => {
+    populatePlanBookSelect();
+    document.getElementById('plan-book-select').value = wishId;
+    onPlanBookSelect();
+  }, 50);
+}
+
+// ==================== 독서 기록 로그 ====================
+function logReadingProgress(shelfBookId, currentPage) {
+  if (!shelfBookId) return;
+  const today = todayStr(); // 로컬 시간 기준
+  if (!db.readingLog[shelfBookId]) db.readingLog[shelfBookId] = {};
+  db.readingLog[shelfBookId][today] = currentPage;
+}
+
+function filterShelf(status, el) {
+  shelfFilter = status;
+  document.querySelectorAll('#section-shelf .chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderShelf();
+}
+
+function renderShelf() {
+  let list = shelfFilter === 'all' ? [...db.shelf] : db.shelf.filter(b => b.status === shelfFilter);
+
+  // 정렬
+  if (shelfFilter === 'all') {
+    // 읽는 중 우선, 그 안에서 수정시각 내림차순 / 완독·중단은 완독일 내림차순
+    const statusOrder = { reading: 0, paused: 1, done: 2 };
+    list.sort((a, b) => {
+      const so = (statusOrder[a.status]||1) - (statusOrder[b.status]||1);
+      if (so !== 0) return so;
+      if (a.status === 'reading') {
+        return new Date(b.updatedAt || b.addedAt || 0) - new Date(a.updatedAt || a.addedAt || 0);
+      }
+      return new Date(b.endDate || 0) - new Date(a.endDate || 0);
+    });
+  } else if (shelfFilter === 'reading') {
+    list.sort((a, b) => new Date(b.updatedAt || b.addedAt || 0) - new Date(a.updatedAt || a.addedAt || 0));
+  } else {
+    // done, paused
+    list.sort((a, b) => new Date(b.endDate || 0) - new Date(a.endDate || 0));
+  }
+
+  const el = document.getElementById('shelf-list');
+  if (list.length === 0) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">📖</div><div class="empty-text">책장이 비어있어요</div></div>`;
+    return;
+  }
+  const LIMIT = 5;
+  const showAll = el.dataset.showAll === 'true';
+  const displayList = showAll ? list : list.slice(0, LIMIT);
+  const statusLabel = { reading: '읽는 중', done: '완독', paused: '중단' };
+  const statusColor = { reading: '#1a73e8', done: '#2e7d32', paused: '#888' };
+  el.innerHTML = displayList.map(book => {
+    const pct = book.pages ? Math.round((book.currentPage / book.pages) * 100) : 0;
+    const stars = book.rating ? '★'.repeat(parseInt(book.rating)) + '☆'.repeat(5 - parseInt(book.rating)) : '';
+    const bookIsEbook = isEbook(book.medium);
+    const progressText = bookIsEbook
+      ? `${pct}% (약 ${book.currentPage}p / ${book.pages}p)`
+      : `${book.currentPage}/${book.pages}p · ${pct}%`;
+    return `<div class="card">
+      <div class="card-header">
+        <div class="book-cover" style="width:44px;height:60px">
+          ${book.cover ? `<img src="${book.cover}" onerror="this.parentElement.textContent='📚'">` : '📚'}
+        </div>
+        <div class="book-main">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:2px">
+            <div class="book-title">${book.title}</div>
+            <span style="font-size:11px; color:${statusColor[book.status] || '#888'}; font-weight:500">${statusLabel[book.status]}</span>
+          </div>
+          <div class="book-author">${book.author || ''}${book.publisher ? ' · ' + book.publisher : ''}</div>
+          <div style="font-size:11px; color:var(--text3); margin-top:2px">
+            ${book.startDate ? '시작 ' + book.startDate : ''}${book.endDate ? ' · 완독 ' + book.endDate : ''}
+          </div>
+          ${stars ? `<div style="font-size:13px; color:#f5a623; margin-top:4px">${stars}</div>` : ''}
+          ${book.review ? `<div style="font-size:12px; color:var(--text2); margin-top:2px; font-style:italic">"${book.review}"</div>` : ''}
+          ${book.pages ? `<div class="progress-wrap">
+            <div class="progress-bar-bg"><div class="progress-bar" style="width:${pct}%"></div></div>
+            <div class="progress-label">${progressText}</div>
+          </div>` : ''}
+          <!-- 모바일 전용 아이콘 (진행률 아래) -->
+          <div class="shelf-card-actions-mobile" style="gap:4px; margin-top:8px">
+            <button class="icon-btn" title="독서 기록" onclick="openReadingChart('${book.id}')">📈</button>
+            <button class="icon-btn" title="메모" onclick="openShelfMemoPanel('${book.id}')">💬</button>
+            <button class="icon-btn" title="독서 정보 수정" onclick="openShelfEditModal('${book.id}')">✏️</button>
+            <button class="icon-btn" title="책 정보 수정" onclick="openShelfBookInfoModal('${book.id}')">📝</button>
+            <button class="icon-btn btn-danger" onclick="deleteShelf('${book.id}')">✕</button>
+          </div>
+        </div>
+        <!-- 데스크탑 전용 아이콘 (우측) -->
+        <div class="book-actions shelf-card-actions-desktop">
+          <button class="icon-btn" title="독서 기록" onclick="openReadingChart('${book.id}')">📈</button>
+          <button class="icon-btn" title="메모" onclick="openShelfMemoPanel('${book.id}')">💬</button>
+          <button class="icon-btn" title="독서 정보 수정" onclick="openShelfEditModal('${book.id}')">✏️</button>
+          <button class="icon-btn" title="책 정보 수정" onclick="openShelfBookInfoModal('${book.id}')">📝</button>
+          <button class="icon-btn btn-danger" onclick="deleteShelf('${book.id}')">✕</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  if (list.length > LIMIT) {
+    const remaining = list.length - LIMIT;
+    el.innerHTML += showAll
+      ? `<div style="text-align:center; margin-top:8px">
+           <button class="btn btn-ghost btn-sm" onclick="toggleShelfShowAll()">접기 ▲</button>
+         </div>`
+      : `<div style="text-align:center; margin-top:8px">
+           <button class="btn btn-ghost btn-sm" onclick="toggleShelfShowAll()">+ ${remaining}권 더보기</button>
+         </div>`;
+  }
+}
+
+function toggleShelfShowAll() {
+  const el = document.getElementById('shelf-list');
+  el.dataset.showAll = el.dataset.showAll === 'true' ? 'false' : 'true';
+  renderShelf();
+}
+
+let _ebookDoneShelfId = null;
+
+function updateShelfPage(id) {
+  const book = db.shelf.find(b => b.id === id);
+  if (!book) return;
+
+  if (isEbook(book.medium)) {
+    const currentPct = pageToPct(book.currentPage, book.pages);
+    openEbookModal(book.title, currentPct, '전자책 진행률을 선택하세요', pct => {
+      const newPage = pctToPage(pct, book.pages);
+      book.currentPage = newPage;
+      book.updatedAt = new Date().toISOString();
+      logReadingProgress(id, newPage);
+      const plan = db.plans.find(pl => pl.shelfId === id);
+      if (plan) plan.currentPage = newPage;
+      save(); renderShelf(); renderPlan();
+      if (pct >= 100) openEbookDoneModal(id);
+    });
+    return;
+  }
+
+  openPageInputModal(
+    book.title,
+    '현재 페이지를 입력하세요 (전체: ' + (book.pages || '?') + 'p)',
+    book.currentPage,
+    book.pages,
+    function(newPage) {
+      book.currentPage = newPage;
+      book.updatedAt = new Date().toISOString();
+      logReadingProgress(id, newPage);
+      const plan = db.plans.find(pl => pl.shelfId === id);
+      if (plan) plan.currentPage = newPage;
+      save(); renderShelf(); renderPlan();
+      if (book.pages && newPage >= book.pages) openEbookDoneModal(id);
+    }
+  );
+}
+
+function openEbookDoneModal(shelfId) {
+  _ebookDoneShelfId = shelfId;
+  const book = db.shelf.find(b => b.id === shelfId);
+  if (!book) return;
+  document.getElementById('ebook-done-title').textContent = '🎉 «' + book.title + '» 완독을 축하해요!';
+  const plan = db.plans.find(p => p.shelfId === shelfId);
+  document.getElementById('ebook-done-plan-row').classList.toggle('hidden', !plan);
+  document.getElementById('ebook-done-simple-row').style.display = plan ? 'none' : 'flex';
+  document.getElementById('ebook-done-modal').classList.remove('hidden');
+}
+
+function closeEbookDoneModal() {
+  document.getElementById('ebook-done-modal').classList.add('hidden');
+  _ebookDoneShelfId = null;
+}
+
+function confirmEbookDone(removePlan) {
+  const book = db.shelf.find(b => b.id === _ebookDoneShelfId);
+  if (book) {
+    book.status = 'done';
+    book.endDate = new Date().toISOString().split('T')[0];
+    if (removePlan) db.plans = db.plans.filter(p => p.shelfId !== _ebookDoneShelfId);
+    save(); renderShelf(); renderPlan();
+  }
+  closeEbookDoneModal();
+}
+
+function deleteShelf(id) {
+  if (!confirm('삭제할까요?')) return;
+  db.shelf = db.shelf.filter(b => b.id !== id);
+  save(); renderShelf();
+}
+
+// ==================== PLAN ====================
+function populatePlanBookSelect() {
+  const sel = document.getElementById('plan-book-select');
+  sel.innerHTML = '<option value="">— 책을 선택하세요 —</option>';
+
+  // 북킷리스트
+  const wishBooks = db.wishlist.filter(b => !db.plans.some(p => p.wishId === b.id));
+  if (wishBooks.length > 0) {
+    sel.innerHTML += '<optgroup label="── 북킷리스트 ──">';
+    wishBooks.forEach(b => {
+      sel.innerHTML += `<option value="wish_${b.id}">${b.title}${b.pages ? ' ('+b.pages+'p)' : ''}</option>`;
+    });
+    sel.innerHTML += '</optgroup>';
+  }
+
+  // 책장 읽는 중 (독서 계획에 없는 것만)
+  const shelfBooks = db.shelf.filter(b =>
+    b.status === 'reading' && !db.plans.some(p => p.shelfId === b.id)
+  );
+  if (shelfBooks.length > 0) {
+    sel.innerHTML += '<optgroup label="── 책장 (읽는 중) ──">';
+    shelfBooks.forEach(b => {
+      sel.innerHTML += `<option value="shelf_${b.id}">${b.title}${b.pages ? ' ('+b.pages+'p)' : ''}</option>`;
+    });
+    sel.innerHTML += '</optgroup>';
+  }
+}
+
+function onPlanBookSelect() {
+  const val = document.getElementById('plan-book-select').value;
+  if (val.startsWith('shelf_')) {
+    const shelfId = val.replace('shelf_', '');
+    const book = db.shelf.find(b => b.id === shelfId);
+    if (book) document.getElementById('plan-current-page').value = book.currentPage || 0;
+  } else {
+    document.getElementById('plan-current-page').value = '';
+  }
+}
+
+function addPlan() {
+  const selectVal = document.getElementById('plan-book-select').value;
+  if (!selectVal) { alert('책을 선택해주세요'); return; }
+  const deadline = document.getElementById('plan-deadline').value;
+  if (!deadline) { alert('마감일을 입력해주세요'); return; }
+
+  const currentPage = parseInt(document.getElementById('plan-current-page').value) || 0;
+  let book, wishId, shelfId;
+
+  if (selectVal.startsWith('shelf_')) {
+    shelfId = selectVal.replace('shelf_', '');
+    book = db.shelf.find(b => b.id === shelfId);
+    wishId = null;
+  } else {
+    wishId = selectVal.replace('wish_', '');
+    book = db.wishlist.find(b => b.id === wishId);
+    shelfId = null;
+  }
+  if (!book) return;
+
+  const plan = {
+    id: Date.now().toString(),
+    wishId, shelfId,
+    title: book.title, author: book.author || '',
+    cover: book.cover || '', pages: book.pages || 0,
+    currentPage: shelfId ? (book.currentPage || 0) : currentPage,
+    deadline,
+    dailyAlloc: 0, allocDate: '', allocStartPage: shelfId ? (book.currentPage || 0) : currentPage, todayDone: false,
+    addedAt: new Date().toISOString()
+  };
+  db.plans.push(plan);
+  applyPlanSort();
+  refreshDailyAlloc();
+  save(); renderPlan();
+  document.getElementById('plan-book-select').value = '';
+  document.getElementById('plan-deadline').value = '';
+  document.getElementById('plan-current-page').value = '';
+}
+
+// ==================== 드래그 앤 드롭 ====================
+let dragSrcId = null;
+function planDragStart(e) { dragSrcId = e.currentTarget.dataset.id; e.currentTarget.style.opacity = '0.4'; e.dataTransfer.effectAllowed = 'move'; }
+function planDragOver(e) { e.preventDefault(); document.querySelectorAll('.plan-card').forEach(c => c.style.borderTop = ''); e.currentTarget.style.borderTop = '2px solid var(--accent)'; }
+function planDrop(e) {
+  e.preventDefault();
+  const targetId = e.currentTarget.dataset.id;
+  if (!dragSrcId || dragSrcId === targetId) return;
+  const si = db.plans.findIndex(p => p.id === dragSrcId);
+  const ti = db.plans.findIndex(p => p.id === targetId);
+  if (si === -1 || ti === -1) return;
+  const [moved] = db.plans.splice(si, 1);
+  db.plans.splice(ti, 0, moved);
+  moved.pinned = true;
+  save(); renderPlan();
+}
+function planDragEnd(e) { e.currentTarget.style.opacity = ''; document.querySelectorAll('.plan-card').forEach(c => c.style.borderTop = ''); dragSrcId = null; }
+
+// 핀 토글: 고정 해제 후 자동 정렬 위치로 재배치
+function togglePlanPin(id) {
+  const plan = db.plans.find(p => p.id === id);
+  if (!plan) return;
+  plan.pinned = false;
+  applyPlanSort();
+  save(); renderPlan();
+}
+
+// 고정 책은 현재 슬롯 유지, 비고정 책을 마감일→남은페이지 순으로 빈 슬롯에 채움
+function applyPlanSort() {
+  const plans = db.plans;
+  const unpinned = plans
+    .filter(p => !p.pinned)
+    .sort((a, b) => {
+      if (a.deadline !== b.deadline) return a.deadline.localeCompare(b.deadline);
+      const remA = Math.max(0, (a.pages||0) - (a.currentPage||0));
+      const remB = Math.max(0, (b.pages||0) - (b.currentPage||0));
+      return remA - remB;
+    });
+  const result = new Array(plans.length).fill(null);
+  plans.forEach((p, i) => { if (p.pinned) result[i] = p; });
+  let ui = 0;
+  for (let i = 0; i < result.length; i++) {
+    if (result[i] === null) result[i] = unpinned[ui++];
+  }
+  db.plans = result;
+}
+
+// ==================== 날짜 / 할당량 계산 ====================
+function toDate(str) { const d = new Date(str); d.setHours(0,0,0,0); return d; }
+function todayDate() { const d = new Date(); d.setHours(0,0,0,0); return d; }
+
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+// 자정 자동 감지 - 날짜 바뀌면 독서계획 재계산
+let _lastCheckedDate = todayStr();
+setInterval(function() {
+  const now = todayStr();
+  if (now !== _lastCheckedDate) {
+    _lastCheckedDate = now;
+    refreshDailyAlloc();
+    save();
+    renderPlan();
+  }
+}, 60000);
+function daysUntil(dateStr) { return Math.ceil((toDate(dateStr) - todayDate()) / 86400000); }
+
+function calcCMPDailyTotal(plans) {
+  if (plans.length === 0) return 0;
+  const totalRemaining = plans.reduce((s, p) => s + Math.max(0, (p.pages||0) - (p.currentPage||0)), 0);
+  const farthest = plans.reduce((far, p) => p.deadline > far ? p.deadline : far, plans[0].deadline);
+  const floorDays = Math.max(1, daysUntil(farthest) + 1);
+  const floor = Math.ceil(totalRemaining / floorDays);
+  let cumulative = 0;
+  let cmp = 0;
+  plans.forEach(p => {
+    const remaining = Math.max(0, (p.pages||0) - (p.currentPage||0));
+    cumulative += remaining;
+    const dLeft = Math.max(1, daysUntil(p.deadline) + 1);
+    const q = Math.ceil(cumulative / dLeft);
+    if (q > cmp) cmp = q;
+  });
+  return Math.max(cmp, floor);
+}
+
+function calcAndStoreDailyAlloc() {
+  const plans = db.plans;
+  if (plans.length === 0) return;
+  const dailyTotal = calcCMPDailyTotal(plans);
+  let budget = dailyTotal;
+  plans.forEach(p => {
+    const remaining = Math.max(0, (p.pages||0) - (p.currentPage||0));
+    if (remaining === 0) { p.dailyAlloc = 0; return; }
+    const assigned = Math.min(remaining, budget);
+    p.dailyAlloc = assigned;
+    budget = Math.max(0, budget - assigned);
+  });
+}
+
+function refreshDailyAlloc() {
+  const today = todayStr();
+  let needsRecalc = false;
+  db.plans.forEach(p => {
+    const badStartPage = (p.allocStartPage||0) > (p.currentPage||0);
+    if (p.allocDate !== today || badStartPage) {
+      p.allocDate = today;
+      p.allocStartPage = p.currentPage;
+      p.todayDone = false;
+      needsRecalc = true;
+    }
+  });
+  if (needsRecalc) calcAndStoreDailyAlloc();
+}
+
+// ==================== RENDER PLAN ====================
+function renderPlan() {
+  populatePlanBookSelect();
+  refreshDailyAlloc();
+  const plans = db.plans;
+
+  const statsEl = document.getElementById('plan-stats');
+  if (plans.length === 0) {
+    statsEl.style.display = 'none';
+    document.getElementById('plan-sub').textContent = '오늘 읽어야 할 페이지를 확인하세요';
+    document.getElementById('plan-list').innerHTML = '<div class="empty"><div class="empty-icon">📅</div><div class="empty-text">독서 계획이 없어요<br>북킷리스트에서 책을 골라 계획을 세워보세요</div></div>';
+    return;
+  }
+
+  statsEl.style.display = '';
+  const activePlan = plans.find(p => (p.dailyAlloc||0) > 0);
+  const todayPages = plans.reduce((s, p) => s + (p.dailyAlloc || 0), 0);
+  document.getElementById('stat-today').textContent = todayPages;
+  document.getElementById('stat-plan-count').textContent = plans.length;
+  const soonest = [...plans].sort((a,b) => a.deadline.localeCompare(b.deadline))[0];
+  const dSoon = daysUntil(soonest.deadline);
+  document.getElementById('stat-deadline').textContent = dSoon <= 0 ? 'D+'+Math.abs(dSoon) : 'D-'+dSoon;
+  document.getElementById('stat-deadline-book').textContent = soonest.title.length > 8 ? soonest.title.slice(0,8)+'...' : soonest.title;
+  const totalRemaining = plans.reduce((s,p) => s + Math.max(0,(p.pages||0)-(p.currentPage||0)), 0);
+  document.getElementById('stat-total-pages').textContent = totalRemaining;
+  document.getElementById('plan-sub').textContent = activePlan
+    ? (activePlan.todayDone ? '오늘 "' + activePlan.title + '" 완료! 내일도 화이팅' : '지금은 "' + activePlan.title + '" 차례 — 오늘 ' + todayPages + 'p')
+    : '모든 책 읽기 완료!';
+
+  // 각 책의 완독 예상일 시뮬레이션 (CMP 방식)
+  const finishEstMap = {};
+  if (plans.length > 0) {
+    const simRemaining = plans.map(p => Math.max(0, (p.pages||0) - (p.currentPage||0)));
+    const simDeadlines = plans.map(p => p.deadline);
+    const simDate = new Date(todayDate());
+    let maxDays = 365;
+    while (maxDays-- > 0) {
+      const simDateStr = simDate.getFullYear() + '-' + String(simDate.getMonth()+1).padStart(2,'0') + '-' + String(simDate.getDate()).padStart(2,'0');
+      const totalRem = simRemaining.reduce((s, r) => s + r, 0);
+      if (totalRem === 0) break;
+      const farthest = simDeadlines.reduce((far, d) => d > far ? d : far, simDeadlines[0]);
+      const floorDays = Math.max(1, Math.ceil((toDate(farthest) - simDate) / 86400000) + 1);
+      const floor = Math.ceil(totalRem / floorDays);
+      let cumulative = 0; let cmp = 0;
+      plans.forEach((p, i) => {
+        cumulative += simRemaining[i];
+        const dLeft = Math.max(1, Math.ceil((toDate(simDeadlines[i]) - simDate) / 86400000) + 1);
+        const q = Math.ceil(cumulative / dLeft);
+        if (q > cmp) cmp = q;
+      });
+      let budget = Math.max(cmp, floor);
+      plans.forEach((p, i) => {
+        if (simRemaining[i] <= 0) return;
+        const consume = Math.min(simRemaining[i], budget);
+        simRemaining[i] -= consume;
+        budget -= consume;
+        if (simRemaining[i] <= 0 && !finishEstMap[p.id]) finishEstMap[p.id] = simDateStr;
+      });
+      simDate.setDate(simDate.getDate() + 1);
+    }
+  }
+
+  document.getElementById('plan-list').innerHTML = plans.map((plan, idx) => {
+    const dp = plan.dailyAlloc || 0;
+    const days = daysUntil(plan.deadline);
+    const remaining = Math.max(0, (plan.pages||0) - (plan.currentPage||0));
+    const pct = plan.pages ? Math.round(((plan.currentPage||0) / plan.pages) * 100) : 0;
+    const rankClass = idx===0?'rank-1':idx===1?'rank-2':idx===2?'rank-3':'';
+    const overdue = days < 0;
+    const done = plan.todayDone;
+
+    // 전자책 여부 확인
+    const shelfBook = plan.shelfId ? db.shelf.find(b => b.id === plan.shelfId) : null;
+    const wishBook = !shelfBook ? db.wishlist.find(b => b.id === plan.wishId) : null;
+    const planMedium = (shelfBook || wishBook || {}).medium || '';
+    const planIsEbook = isEbook(planMedium);
+
+    let finishEst = finishEstMap[plan.id] || '';
+    if (finishEst === '완독') finishEst = '';
+    const atRisk = finishEst && finishEst > plan.deadline;
+    const todayRead = Math.max(0, plan.currentPage - (plan.allocStartPage||0));
+    const todayPct = dp > 0 ? Math.min(100, Math.round(todayRead / dp * 100)) : 0;
+
+    // 전자책: 남은 % 표시
+    const remainingDisplay = planIsEbook ? (100-pct)+'% 남음' : remaining+'p 남음';
+    const progressLabel = planIsEbook
+      ? pct+'% 전체 · 오늘 '+todayPct+'%'
+      : plan.currentPage+'/'+plan.pages+'p 전체 · 오늘 '+todayRead+'/'+dp+'p ('+todayPct+'%)';
+    const dailyDisplay = planIsEbook
+      ? (dp ? Math.round(dp/plan.pages*100)+'%' : '—')
+      : (dp||'—');
+    const dailyUnit = planIsEbook ? '' : (dp?' <span class="plan-daily-unit">p</span>':'');
+
+    const pinHtml = plan.pinned
+      ? '<button class="pin-btn" onclick="togglePlanPin(\'' + plan.id + '\')" title="고정 해제 (자동 정렬로 복귀)">📌</button>'
+      : '';
+    return '<div class="plan-card' + (plan.pinned ? ' pinned-card' : '') + '" draggable="true" data-id="' + plan.id + '" ondragstart="planDragStart(event)" ondragover="planDragOver(event)" ondrop="planDrop(event)" ondragend="planDragEnd(event)">' +
+      '<div class="plan-header">' +
+        '<div class="drag-handle" title="드래그해서 순서 변경">⠿</div>' +
+        '<div class="plan-rank ' + rankClass + '">' + (idx+1) + '</div>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div class="book-title">' + plan.title + (planIsEbook ? ' <span style="font-size:10px;color:var(--text3)">전자책</span>' : '') + '</div>' +
+          '<div class="book-author">' + plan.author + '</div>' +
+          '<div class="deadline-info">마감 <b>' + plan.deadline + '</b> · ' +
+            '<span class="' + (overdue||atRisk?'overdue':'') + '">' + (overdue ? '⚠ '+Math.abs(days)+'일 지남' : days===0 ? '오늘 마감' : 'D-'+days) + (atRisk&&!overdue?' ⚠':'') + '</span>' +
+            ' · <b>' + remainingDisplay + '</b></div>' +
+        '</div>' +
+        '<div class="book-actions">' +
+          pinHtml +
+          '<button class="icon-btn" onclick="logPlanPage(\'' + plan.id + '\')" title="페이지 기록">✏️</button>' +
+          '<button class="icon-btn" onclick="openPlanEditModal(\'' + plan.id + '\')" title="계획 수정">⚙️</button>' +
+          '<button class="icon-btn btn-danger" onclick="deletePlan(\'' + plan.id + '\')">✕</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="plan-daily">' +
+        '<div><div class="plan-daily-label">오늘 읽어야 할</div>' +
+        '<div><span class="plan-daily-val">' + dailyDisplay + '</span>' + dailyUnit + '</div></div>' +
+        '<div style="text-align:right"><div class="plan-daily-label">' + (done?'오늘 완료 ✅':finishEst?'완독 예상':'진도율') + '</div>' +
+        '<div style="font-size:' + (finishEst?'14px':'18px') + ';font-weight:600;color:' + (done?'#2e7d32':'inherit') + '">' + (done?'완료':finishEst||pct+'%') + '</div></div>' +
+      '</div>' +
+      '<div class="progress-wrap" style="margin-top:8px">' +
+        '<div class="progress-bar-bg"><div class="progress-bar" style="width:' + pct + '%"></div></div>' +
+        '<div class="progress-label">' + progressLabel + '</div>' +
+      '</div></div>';
+  }).join('');
+}
+
+function logPlanPage(id) {
+  const plan = db.plans.find(p => p.id === id);
+  if (!plan) return;
+
+  // 연결된 책의 매체 확인
+  const shelfBook = plan.shelfId ? db.shelf.find(b => b.id === plan.shelfId) : null;
+  const wishBook = !shelfBook ? db.wishlist.find(b => b.id === plan.wishId) : null;
+  const medium = (shelfBook || wishBook || {}).medium || '';
+
+  if (isEbook(medium) && plan.pages > 0) {
+    const currentPct = pageToPct(plan.currentPage, plan.pages);
+    const targetPct = plan.dailyAlloc > 0
+      ? pageToPct((plan.allocStartPage||0) + plan.dailyAlloc, plan.pages)
+      : null;
+    const subText = targetPct !== null ? `오늘 목표: ${targetPct}%` : '오늘 할당량 없음 — 자유롭게 기록';
+    openEbookModal(plan.title, currentPct, subText, pct => {
+      const newPage = pctToPage(pct, plan.pages);
+      _applyPlanProgress(id, plan, newPage);
+    });
+    return;
+  }
+
+  const target = (plan.allocStartPage||0) + (plan.dailyAlloc||0);
+  const subText = plan.dailyAlloc > 0
+    ? '전체 ' + plan.pages + 'p · 오늘 목표: ' + target + 'p'
+    : '전체 ' + plan.pages + 'p · 오늘 할당량 없음 — 자유롭게 기록';
+  openPageInputModal(
+    plan.title,
+    subText,
+    plan.currentPage,
+    plan.pages,
+    function(newPage) { _applyPlanProgress(id, plan, newPage); }
+  );
+}
+
+function _applyPlanProgress(id, plan, newPage) {
+  plan.currentPage = newPage;
+  const target = (plan.allocStartPage||0) + (plan.dailyAlloc||0);
+  if (newPage >= target && !plan.todayDone) plan.todayDone = true;
+  if (newPage >= 1 && !plan.shelfId) {
+    const wish = db.wishlist.find(b => b.id === plan.wishId);
+    if (wish) {
+      const shelfBook = {
+        id: Date.now().toString(),
+        title: wish.title, author: wish.author||'', publisher: wish.publisher||'',
+        pages: wish.pages||0, cover: wish.cover||'', categories: wish.categories||[],
+        medium: wish.medium||'',
+        currentPage: newPage, status: 'reading', rating: '', review: '',
+        startDate: new Date().toISOString().split('T')[0], endDate: '',
+        addedAt: new Date().toISOString()
+      };
+      db.shelf.push(shelfBook);
+      plan.shelfId = shelfBook.id;
+      db.wishlist = db.wishlist.filter(b => b.id !== plan.wishId);
+    }
+  } else if (plan.shelfId) {
+    const shelfBook = db.shelf.find(b => b.id === plan.shelfId);
+    if (shelfBook) {
+      shelfBook.currentPage = newPage;
+      shelfBook.updatedAt = new Date().toISOString();
+      logReadingProgress(plan.shelfId, newPage);
+      if (shelfBook.pages && newPage >= shelfBook.pages) {
+        shelfBook.status = 'done';
+        shelfBook.endDate = new Date().toISOString().split('T')[0];
+      }
+    }
+  }
+  if (plan.pages > 0 && newPage >= plan.pages) {
+    openDoneModal(id);
+    save(); renderPlan(); renderWishlist(); renderShelf();
+    return;
+  }
+  save(); renderPlan(); renderWishlist(); renderShelf();
+}
+
+// ==================== 독서 계획 수정 ====================
+let editingPlanId = null;
+
+function openPlanEditModal(id) {
+  const plan = db.plans.find(p => p.id === id);
+  if (!plan) return;
+  editingPlanId = id;
+  document.getElementById('plan-edit-title').textContent = plan.title;
+  document.getElementById('plan-edit-deadline').value = plan.deadline;
+  document.getElementById('plan-edit-pages').value = plan.pages || '';
+  document.getElementById('plan-edit-modal').classList.remove('hidden');
+}
+
+function closePlanEditModal() {
+  document.getElementById('plan-edit-modal').classList.add('hidden');
+  editingPlanId = null;
+}
+
+function savePlanEdit() {
+  const plan = db.plans.find(p => p.id === editingPlanId);
+  if (!plan) return;
+  const deadline = document.getElementById('plan-edit-deadline').value;
+  const pages = parseInt(document.getElementById('plan-edit-pages').value);
+  if (!deadline) { alert('마감일을 입력해주세요'); return; }
+  if (!pages || pages < 1) { alert('페이지 수를 입력해주세요'); return; }
+
+  plan.deadline = deadline;
+  plan.pages = pages;
+
+  // 책장/북킷리스트 페이지수도 동기화
+  if (plan.shelfId) {
+    const shelf = db.shelf.find(b => b.id === plan.shelfId);
+    if (shelf) shelf.pages = pages;
+  } else if (plan.wishId) {
+    const wish = db.wishlist.find(b => b.id === plan.wishId);
+    if (wish) wish.pages = pages;
+  }
+
+  // 마감일 바뀐 책은 고정 해제 후 재정렬
+  plan.pinned = false;
+  applyPlanSort();
+  calcAndStoreDailyAlloc();
+
+  closePlanEditModal();
+  save();
+  renderPlan();
+}
+
+document.getElementById('plan-edit-modal').addEventListener('click', function(e) {
+  if (e.target === this) closePlanEditModal();
+});
+
+let _deletingPlanId = null;
+
+function deletePlan(id) {
+  const plan = db.plans.find(p => p.id === id);
+  if (!plan) return;
+  _deletingPlanId = id;
+  document.getElementById('plan-delete-title').textContent = '«' + plan.title + '» 계획을 삭제할까요?';
+  document.getElementById('plan-delete-modal').classList.remove('hidden');
+}
+
+function closePlanDeleteModal() {
+  _deletingPlanId = null;
+  document.getElementById('plan-delete-modal').classList.add('hidden');
+}
+
+function confirmDeletePlan() {
+  if (!_deletingPlanId) return;
+  db.plans = db.plans.filter(p => p.id !== _deletingPlanId);
+  calcAndStoreDailyAlloc();
+  save(); renderPlan();
+  closePlanDeleteModal();
+}
+
+// ==================== MEMO ====================
+let memoBookFilter = 'all';
+let memoTypeFilter = 'all';
+let editingMemoId = null;
+
+function populateMemoBookSelect() {
+  const sel = document.getElementById('memo-book-select');
+  sel.innerHTML = '<option value="">— 독서 계획에서 선택 —</option>';
+  db.plans.forEach(p => {
+    const bookId = p.shelfId ? 'shelf_' + p.shelfId : 'wish_' + p.wishId;
+    sel.innerHTML += `<option value="${bookId}">${p.title}</option>`;
+  });
+  // 작성일시 기본값: 현재 로컬 시간
+  const now = new Date();
+  now.setSeconds(0, 0);
+  const localISO = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  document.getElementById('memo-date').value = localISO;
+  updateMemoBookFilterSelect();
+}
+
+function addMemo() {
+  const bookId = document.getElementById('memo-book-select').value;
+  if (!bookId) { alert('책을 선택해주세요'); return; }
+  const memoTypeEl = document.getElementById('memo-type-select');
+  const memoType = memoTypeEl ? memoTypeEl.value : 'memo';
+  const quote = document.getElementById('memo-quote').value.trim();
+  const content = document.getElementById('memo-content').value.trim();
+
+  if (memoType === 'quote' && !quote) { alert('\ubc1c\ucdcc 분류를 선택했으면 \ubc1c\ucdcc 내용을 입력해주세요'); return; }
+  if (!quote && !content) { alert('메모 또는 \ubc1c\ucdcc 내용을 입력해주세요'); return; }
+
+  let bookTitle = '';
+  if (bookId.startsWith('shelf_')) bookTitle = (db.shelf.find(b => 'shelf_' + b.id === bookId) || {}).title || '';
+  else if (bookId.startsWith('wish_')) bookTitle = (db.wishlist.find(b => 'wish_' + b.id === bookId) || {}).title || '';
+
+  const pageRaw = document.getElementById('memo-page').value.trim();
+  // 전자책 여부 확인
+  let bookMedium = '';
+  if (bookId.startsWith('shelf_')) bookMedium = (db.shelf.find(b => 'shelf_' + b.id === bookId) || {}).medium || '';
+  else if (bookId.startsWith('wish_')) bookMedium = (db.wishlist.find(b => 'wish_' + b.id === bookId) || {}).medium || '';
+  // 전자책이고 숫자만 입력했으면 자동으로 % 붙이기
+  let memoPage = null;
+  if (pageRaw) {
+    if (pageRaw.includes('%')) memoPage = pageRaw;
+    else if (isEbook(bookMedium)) memoPage = pageRaw + '%';
+    else memoPage = parseInt(pageRaw) || null;
+  }
+
+  const dateVal = document.getElementById('memo-date').value;
+  const memo = {
+    id: Date.now().toString(),
+    bookId, bookTitle,
+    page: memoPage,
+    quote: quote || null,
+    content: content || null,
+    type: memoType,
+    createdAt: dateVal ? new Date(dateVal).toISOString() : new Date().toISOString()
+  };
+  db.memos.push(memo);
+  save();
+  document.getElementById('memo-quote').value = '';
+  document.getElementById('memo-content').value = '';
+  document.getElementById('memo-page').value = '';
+  if (memoTypeEl) memoTypeEl.value = 'memo';
+  toggleMemoQuote('memo');
+  const now2 = new Date(); now2.setSeconds(0,0);
+  document.getElementById('memo-date').value = new Date(now2.getTime() - now2.getTimezoneOffset()*60000).toISOString().slice(0,16);
+  renderMemos();
+}
+
+
+function setMemoBookFilter(val) {
+  memoBookFilter = val;
+  renderMemos();
+}
+
+function setMemoTypeFilter(val, el) {
+  memoTypeFilter = val;
+  document.querySelectorAll('#memo-type-filter .chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderMemos();
+}
+
+function setMemoDateFilter(val) {
+  memoDateFilter = val;
+  renderMemos();
+}
+
+function clearMemoDateFilter() {
+  memoDateFilter = '';
+  const el = document.getElementById('memo-date-filter');
+  if (el) el.value = '';
+  renderMemos();
+}
+
+function updateMemoBookFilterSelect() {
+  const sel = document.getElementById('memo-book-filter-select');
+  if (!sel) return;
+  const books = [...new Map(db.memos.filter(m => m.bookTitle).map(m => [m.bookId, m.bookTitle])).entries()];
+  sel.innerHTML = '<option value="all">전체 책</option>' +
+    books.map(([id, title]) => `<option value="${id}" ${memoBookFilter===id?'selected':''}>${title}</option>`).join('');
+}
+
+function renderMemos() {
+  updateMemoBookFilterSelect();
+  let list = [...db.memos];
+  if (memoBookFilter !== 'all') list = list.filter(m => m.bookId === memoBookFilter);
+  if (memoTypeFilter === 'quote') list = list.filter(m => m.type === 'quote');
+  if (memoTypeFilter === 'memo') list = list.filter(m => m.type !== 'quote');
+  if (memoDateFilter) list = list.filter(m => localDateStr(m.createdAt) === memoDateFilter);
+  list.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  const el = document.getElementById('memo-list');
+  if (list.length === 0) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">✏️</div><div class="empty-text">메모가 없어요<br>책을 읽으며 기록을 남겨보세요</div></div>`;
+    return;
+  }
+
+  // 날짜별 그룹
+  const grouped = {};
+  list.forEach(m => {
+    const key = localDateStr(m.createdAt);
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(m);
+  });
+
+  el.innerHTML = Object.entries(grouped).map(([date, memos]) => `
+    <div style="margin-bottom:1.5rem">
+      <div style="font-size:12px; font-weight:500; color:var(--text3); margin-bottom:8px; letter-spacing:0.3px">${date}</div>
+      ${memos.map(m => {
+        const d = new Date(m.createdAt);
+        const timeStr = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+        const mBookId = m.bookId || '';
+        const mShelfBook = mBookId.startsWith('shelf_') ? db.shelf.find(b => 'shelf_'+b.id === mBookId) : null;
+        const mWishBook = mBookId.startsWith('wish_') ? db.wishlist.find(b => 'wish_'+b.id === mBookId) : null;
+        const mMedium = (mShelfBook || mWishBook || {}).medium || '';
+        const pageDisp = m.page ? (String(m.page).includes('%') ? ' · ' + m.page : isEbook(mMedium) ? ' · ' + m.page + '%' : ' · p.' + m.page) : '';
+        return `<div class="log-item">
+          <div class="log-meta">${m.type==='quote'?'[\ubc1c\ucdcc] ':''}${timeStr}${pageDisp}${m.bookTitle && memoBookFilter==='all' ? ' · '+m.bookTitle : ''}</div>
+          ${m.quote ? `<div class="log-quote" style="white-space:pre-wrap">${m.quote}</div>` : ''}
+          ${m.content ? `<div class="log-text" style="margin-top:${m.quote?'6px':'0'};white-space:pre-wrap">${m.content}</div>` : ''}
+          <div style="display:flex;gap:6px;margin-top:4px">
+            <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:2px 6px" onclick="openMemoEditModal(this.dataset.id)" data-id="${m.id}">수정</button>
+            <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:2px 6px;color:var(--text3)" onclick="deleteMemo(this.dataset.id)" data-id="${m.id}">삭제</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  `).join('');
+}
+
+function deleteMemo(id) {
+  if (!confirm('메모를 삭제할까요?')) return;
+  db.memos = db.memos.filter(m => m.id !== id);
+  save(); renderMemos();
+}
+
+function toggleMeditQuote(type) {
+  const label = document.getElementById('medit-quote-label');
+  if (label) label.textContent = type === 'quote' ? '\ubc1c\ucdcc 내용 *' : '\ubc1c\ucdcc 내용';
+}
+
+function openMemoEditModal(id) {
+  const m = db.memos.find(m => m.id === id);
+  if (!m) return;
+  editingMemoId = id;
+  document.getElementById('medit-page').value = m.page || '';
+  document.getElementById('medit-quote').value = m.quote || '';
+  document.getElementById('medit-content').value = m.content || '';
+  document.getElementById('medit-type').value = m.type || 'memo';
+  toggleMeditQuote(m.type || 'memo');
+  const d = new Date(m.createdAt);
+  const localISO = new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,16);
+  document.getElementById('medit-date').value = localISO;
+  document.getElementById('memo-edit-modal').classList.remove('hidden');
+}
+
+function closeMemoEditModal() {
+  document.getElementById('memo-edit-modal').classList.add('hidden');
+  editingMemoId = null;
+}
+
+function saveMemoEdit() {
+  const m = db.memos.find(m => m.id === editingMemoId);
+  if (!m) return;
+  const type = document.getElementById('medit-type').value;
+  const quote = document.getElementById('medit-quote').value.trim();
+  const content = document.getElementById('medit-content').value.trim();
+  if (type === 'quote' && !quote) { alert('\ubc1c\ucdcc 내용을 입력해주세요'); return; }
+  if (!quote && !content) { alert('내용을 입력해주세요'); return; }
+  m.page = parseInt(document.getElementById('medit-page').value) || null;
+  m.quote = quote || null;
+  m.content = content || null;
+  m.type = type;
+  const dateVal = document.getElementById('medit-date').value;
+  if (dateVal) m.createdAt = new Date(dateVal).toISOString();
+  closeMemoEditModal();
+  save(); renderMemos();
+  // 책장 메모 패널이 열려있으면 같이 갱신
+  if (currentShelfBookId) renderShelfMemoList(currentShelfBookId);
+}
+
+document.getElementById('memo-edit-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeMemoEditModal();
+});
+
+function showToast(msg, duration=2000) {
+  const el = document.getElementById('toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), duration);
+}
+
+function toggleMemoQuote(type) {
+  try {
+    if (label) label.textContent = type === 'quote' ? '\ubc1c\ucdcc 내용 *' : '\ubc1c\ucdcc 내용';
+  } catch(e) {}
+}
+
+function toggleShelfMemoQuote(type) {
+  try {
+    const label = document.getElementById('shelf-memo-quote-label');
+    if (label) label.textContent = type === 'quote' ? '\ubc1c\ucdcc 내용 *' : '\ubc1c\ucdcc 내용';
+  } catch(e) {}
+}
+function renderRecentTagSuggestions() {
+  const allTags = db.wishlist.flatMap(b => b.tags);
+  const seen = new Set();
+  const recent = [];
+  for (let i = allTags.length - 1; i >= 0; i--) {
+    if (!seen.has(allTags[i])) { seen.add(allTags[i]); recent.push(allTags[i]); }
+    if (recent.length >= 10) break;
+  }
+  const el = document.getElementById('tag-suggestions');
+  if (!el) return;
+  if (recent.length === 0) {
+    el.innerHTML = '<span style="font-size:11px; color:var(--text3)">태그를 추가하면 여기 나타나요</span>';
+  } else {
+    el.innerHTML = recent.map(t =>
+      `<span class="tag-sug" onclick="addWishTagByName('${t}')">${t}</span>`
+    ).join('');
+  }
+}
+
+function showTitleDuplicates(q) {
+  const drop = document.getElementById('ac-title-dup');
+  if (!q || q.length < 1) { drop.classList.add('hidden'); return; }
+  const matches = db.wishlist.filter(b => b.title.includes(q));
+  if (matches.length === 0) { drop.classList.add('hidden'); return; }
+  drop.innerHTML = `<div style="padding:6px 10px; font-size:11px; color:var(--text3); border-bottom:1px solid var(--border)">목록에 있는 책 — 선택하면 태그만 추가</div>` +
+    matches.map(b =>
+      `<div class="ac-item" style="display:flex; gap:8px; align-items:center"
+        onmousedown="selectExistingBook('${b.id}')">
+        ${b.cover ? `<img src="${b.cover}" style="width:24px;height:34px;object-fit:cover;border-radius:2px;flex-shrink:0">` : '<div style="width:24px;height:34px;background:var(--bg3);border-radius:2px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px">📚</div>'}
+        <div style="min-width:0">
+          <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${b.title}</div>
+          <div style="font-size:11px;color:var(--text2)">${[b.author, b.publisher, b.pages ? b.pages+'p' : ''].filter(Boolean).join(' · ')}</div>
+        </div>
+      </div>`
+    ).join('');
+  drop.classList.remove('hidden');
+}
+
+function selectExistingBook(id) {
+  const book = db.wishlist.find(b => b.id === id);
+  if (!book) return;
+  hideAC('ac-title-dup');
+  // 폼에 해당 책 정보 채우기
+  document.getElementById('wish-title').value = book.title;
+  document.getElementById('wish-author').value = book.author || '';
+  document.getElementById('wish-publisher').value = book.publisher || '';
+  document.getElementById('wish-pages').value = book.pages || '';
+  document.getElementById('wish-cover').value = book.cover || '';
+  previewCover(book.cover || '');
+  tempWishCategories = [...(book.categories || [])];
+  renderWishCategoriesPreview();
+  // 태그 추가 모드 안내 배너 표시
+  showTagOnlyBanner(book);
+}
+
+function showTagOnlyBanner(book) {
+  let banner = document.getElementById('tag-only-banner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'tag-only-banner';
+    banner.style.cssText = 'background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:8px 12px;margin-bottom:10px;font-size:12px;color:var(--text2);display:flex;align-items:center;justify-content:space-between;gap:8px';
+    document.getElementById('book-form-fields').prepend(banner);
+  }
+  banner.innerHTML = `<span>📌 <b style="color:var(--text)">${book.title}</b> (${[book.author, book.publisher].filter(Boolean).join(', ')}) — 이미 목록에 있어요. 태그만 추가하거나, 내용을 수정해서 새 책으로 추가할 수 있어요.</span>
+    <button class="btn btn-ghost btn-sm" style="flex-shrink:0" onclick="dismissTagOnlyBanner()">✕</button>`;
+}
+
+function dismissTagOnlyBanner() {
+  const b = document.getElementById('tag-only-banner');
+  if (b) b.remove();
+}
+
+function getCategoryOptions(q) {
+  return [...new Set(db.wishlist.flatMap(b => b.categories || []).concat(db.shelf.flatMap(b => b.categories || [])))]
+    .filter(c => c.includes(q));
+}
+
+// ==================== 카테고리 (추가 폼) ====================
+function addWishCategory() {
+  const input = document.getElementById('wish-category');
+  const val = input.value.trim();
+  if (val && !tempWishCategories.includes(val)) {
+    tempWishCategories.push(val);
+    renderWishCategoriesPreview();
+  }
+  input.value = '';
+  hideAC('ac-category');
+}
+
+function removeWishCategory(i) {
+  tempWishCategories.splice(i, 1);
+  renderWishCategoriesPreview();
+}
+
+function renderWishCategoriesPreview() {
+  document.getElementById('wish-categories-preview').innerHTML =
+    tempWishCategories.map((c, i) =>
+      `<span class="tag">${c} <span class="tag-remove" onclick="removeWishCategory(${i})">✕</span></span>`
+    ).join('');
+}
+
+// ==================== 카테고리 (수정 모달) ====================
+function addEditCategory() {
+  const input = document.getElementById('edit-category');
+  const val = input.value.trim();
+  if (val && !editCategories.includes(val)) {
+    editCategories.push(val);
+    renderEditCategories();
+  }
+  input.value = '';
+  hideAC('ac-edit-category');
+}
+
+function removeEditCategory(i) {
+  editCategories.splice(i, 1);
+  renderEditCategories();
+}
+
+function renderEditCategories() {
+  document.getElementById('edit-categories-preview').innerHTML =
+    editCategories.map((c, i) =>
+      `<span class="tag">${c} <span class="tag-remove" onclick="removeEditCategory(${i})">✕</span></span>`
+    ).join('');
+}
+function getTagOptions(q) {
+  return [...new Set(db.wishlist.flatMap(b => b.tags))]
+    .filter(t => t.includes(q));
+}
+function showAC(inputId, dropId, optionsFn) {
+  const q = document.getElementById(inputId).value.trim();
+  const drop = document.getElementById(dropId);
+  if (!q) { drop.classList.add('hidden'); return; }
+  const opts = optionsFn(q);
+  if (opts.length === 0) { drop.classList.add('hidden'); return; }
+  drop.innerHTML = opts.map(o =>
+    `<div class="ac-item" onmousedown="pickAC('${inputId}','${dropId}','${o.replace(/'/g,"\\'")}','${inputId==='wish-tag-input'?'tag':''}')">${o}</div>`
+  ).join('');
+  drop.classList.remove('hidden');
+}
+function hideAC(dropId) {
+  document.getElementById(dropId).classList.add('hidden');
+}
+function pickAC(inputId, dropId, val, type) {
+  if (type === 'tag') {
+    if (!tempWishTags.includes(val)) {
+      tempWishTags.push(val);
+      renderWishTagsPreview();
+    }
+    document.getElementById(inputId).value = '';
+  } else {
+    document.getElementById(inputId).value = val;
+  }
+  hideAC(dropId);
+}
+
+// ==================== 책장 메모 패널 ====================
+let currentShelfBookId = null;
+
+function openShelfMemoPanel(bookId) {
+  const book = db.shelf.find(b => b.id === bookId);
+  if (!book) return;
+  currentShelfBookId = bookId;
+  document.getElementById('shelf-memo-book-title').textContent = book.title + ' — 메모';
+  document.getElementById('shelf-memo-content').value = '';
+  document.getElementById('shelf-memo-quote').value = '';
+  document.getElementById('shelf-memo-page').value = '';
+  const now2 = new Date(); now2.setSeconds(0,0);
+  document.getElementById('shelf-memo-date').value = new Date(now2.getTime() - now2.getTimezoneOffset()*60000).toISOString().slice(0,16);
+  document.getElementById('shelf-memo-panel').classList.remove('hidden');
+  renderShelfMemoList(bookId);
+}
+
+function closeShelfMemoPanel() {
+  document.getElementById('shelf-memo-panel').classList.add('hidden');
+  currentShelfBookId = null;
+}
+
+function saveShelfMemo() {
+  if (!currentShelfBookId) return;
+  const typeEl = document.getElementById('shelf-memo-type-select');
+  const memoType = typeEl ? typeEl.value : 'memo';
+  const quote = document.getElementById('shelf-memo-quote').value.trim();
+  const content2 = document.getElementById('shelf-memo-content').value.trim();
+  if (memoType === 'quote' && !quote) { alert('\ubc1c\ucdcc 분류를 선택했으면 \ubc1c\ucdcc 내용을 입력해주세요'); return; }
+  if (!quote && !content2) { alert('\ubc1c\ucdcc 또는 메모를 입력해주세요'); return; }
+  const book = db.shelf.find(b => b.id === currentShelfBookId);
+  const dateVal = document.getElementById('shelf-memo-date').value;
+  const pageRaw = document.getElementById('shelf-memo-page').value.trim();
+  let memoPage = null;
+  if (pageRaw) {
+    if (pageRaw.includes('%')) memoPage = pageRaw;
+    else memoPage = parseInt(pageRaw) || null;
+  }
+  const memo = {
+    id: Date.now().toString(),
+    bookId: 'shelf_' + currentShelfBookId,
+    bookTitle: book ? book.title : '',
+    page: memoPage,
+    quote: quote || null,
+    content: content2 || null,
+    type: memoType,
+    createdAt: dateVal ? new Date(dateVal).toISOString() : new Date().toISOString()
+  };
+  db.memos.push(memo);
+  save();
+  document.getElementById('shelf-memo-quote').value = '';
+  document.getElementById('shelf-memo-content').value = '';
+  document.getElementById('shelf-memo-page').value = '';
+  if (typeEl) { typeEl.value = 'memo'; toggleShelfMemoQuote('memo'); }
+  const now2 = new Date(); now2.setSeconds(0,0);
+  document.getElementById('shelf-memo-date').value = new Date(now2.getTime() - now2.getTimezoneOffset()*60000).toISOString().slice(0,16);
+  renderShelfMemoList(currentShelfBookId);
+  updateBadges();
+}
+
+
+function renderShelfMemoList(bookId) {
+  const bookKey = 'shelf_' + bookId;
+  const list = db.memos.filter(m => m.bookId === bookKey).sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+  const el = document.getElementById('shelf-memo-list');
+  if (list.length === 0) {
+    el.innerHTML = '<div style="text-align:center; padding:2rem; color:var(--text3); font-size:13px">아직 메모가 없어요</div>';
+    return;
+  }
+  const sBook = db.shelf.find(b => b.id === bookId);
+  el.innerHTML = list.map(m => {
+    const d = new Date(m.createdAt);
+    const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    const pageDisp = m.page ? (String(m.page).includes('%') ? ' · ' + m.page : isEbook((sBook||{}).medium) ? ' · ' + m.page + '%' : ' · p.' + m.page) : '';
+    return `<div class="log-item">
+      <div class="log-meta">${m.type==='quote'?'[\ubc1c\ucdcc] ':''}${dateStr}${pageDisp}</div>
+      ${m.quote ? `<div class="log-quote" style="white-space:pre-wrap">${m.quote}</div>` : ''}
+      ${m.content ? `<div class="log-text" style="white-space:pre-wrap;margin-top:${m.quote?'6px':'0'}">${m.content}</div>` : ''}
+      <div style="display:flex;gap:6px;margin-top:4px">
+        <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:2px 6px" onclick="openMemoEditModal(this.dataset.id)" data-id="${m.id}">수정</button>
+        <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:2px 6px;color:var(--text3)" onclick="deleteShelfMemo(this.dataset.id)" data-id="${m.id}">삭제</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function deleteShelfMemo(id) {
+  if (!confirm('메모를 삭제할까요?')) return;
+  db.memos = db.memos.filter(m => m.id !== id);
+  save();
+  if (currentShelfBookId) renderShelfMemoList(currentShelfBookId);
+  renderMemos();
+}
+
+
+
+// ==================== 페이지 입력 모달 ====================
+let _pageInputCallback = null;
+let _pageInputMax = 0;
+let _pageInputOpenedAt = 0;
+
+function openPageInputModal(title, sub, currentPage, maxPage, callback) {
+  _pageInputCallback = callback;
+  _pageInputMax = maxPage || 99999;
+  _pageInputOpenedAt = Date.now();
+  document.getElementById('page-input-title').textContent = title;
+  document.getElementById('page-input-sub').textContent = sub;
+  const input = document.getElementById('page-input-val');
+  input.value = currentPage || 0;
+  input.max = _pageInputMax;
+  document.getElementById('page-input-modal').classList.remove('hidden');
+  setTimeout(() => { input.select(); }, 50);
+}
+
+function closePageInputModal() {
+  document.getElementById('page-input-modal').classList.add('hidden');
+  _pageInputCallback = null;
+}
+
+function confirmPageInput() {
+  const val = document.getElementById('page-input-val').value;
+  const newPage = Math.min(parseInt(val)||0, _pageInputMax);
+  const cb = _pageInputCallback;
+  closePageInputModal();
+  if (cb) cb(newPage);
+}
+
+document.getElementById('page-input-modal').addEventListener('click', function(e) {
+  if (e.target === this && Date.now() - _pageInputOpenedAt > 300) closePageInputModal();
+});
+
+document.getElementById('page-input-val').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') confirmPageInput();
+  if (e.key === 'Escape') closePageInputModal();
+});
+
+// ==================== 완독 모달 ====================
+let doneModalPlanId = null;
+let doneStar = 0;
+
+function openDoneModal(planId) {
+  doneModalPlanId = planId;
+  doneStar = 0;
+  const plan = db.plans.find(p => p.id === planId);
+  document.getElementById('done-book-title').textContent = plan ? plan.title : '';
+  document.getElementById('done-review').value = '';
+  [1,2,3,4,5].forEach(n => document.getElementById('star-btn-'+n).style.background = '');
+  document.getElementById('done-modal').classList.remove('hidden');
+}
+
+function selectDoneStar(n) {
+  doneStar = n;
+  [1,2,3,4,5].forEach(i => {
+    document.getElementById('star-btn-'+i).style.background = i === n ? 'var(--bg3)' : '';
+    document.getElementById('star-btn-'+i).style.fontWeight = i === n ? '600' : '';
+  });
+}
+
+async function saveDoneModal(doSave) {
+  const plan = db.plans.find(p => p.id === doneModalPlanId);
+  if (plan && plan.shelfId) {
+    const book = db.shelf.find(b => b.id === plan.shelfId);
+    if (book) {
+      book.status = 'done';
+      book.endDate = new Date().toISOString().split('T')[0];
+      if (doSave && doneStar) book.rating = String(doneStar);
+      if (doSave) { const rv = document.getElementById('done-review').value.trim(); if (rv) book.review = rv; }
+    }
+  }
+  if (plan) db.plans = db.plans.filter(p => p.id !== doneModalPlanId);
+
+  // 버튼 비활성화 + 저장 중 표시
+  const btns = document.querySelectorAll('#done-modal button');
+  btns.forEach(b => { b.disabled = true; });
+  const primaryBtn = document.querySelector('#done-modal .btn-primary');
+  if (primaryBtn) primaryBtn.textContent = '저장 중...';
+
+  localStorage.setItem('booklog_data', JSON.stringify(db));
+  window._lastSavedDb = db;
+  updateBadges();
+
+  // Firebase 저장 완료 대기
+  if (window.firebaseSave) {
+    try { await window.firebaseSave(db); } catch(e) {}
+  }
+
+  document.getElementById('done-modal').classList.add('hidden');
+  btns.forEach(b => { b.disabled = false; });
+  if (primaryBtn) primaryBtn.textContent = '저장하고 완독 처리';
+  doneModalPlanId = null;
+  renderPlan(); renderShelf();
+}
+
+document.getElementById('done-modal').addEventListener('click', function(e) {
+  if (e.target === this) { saveDoneModal(false); }
+});
+
+// ==================== 책장 수정 모달 ====================
+let editingShelfId = null;
+
+function openShelfEditModal(id) {
+  const book = db.shelf.find(b => b.id === id);
+  if (!book) return;
+  editingShelfId = id;
+  document.getElementById('sedit-status').value = book.status || 'reading';
+  document.getElementById('sedit-start').value = book.startDate || '';
+  document.getElementById('sedit-end').value = book.endDate || '';
+  document.getElementById('sedit-rating').value = book.rating || '';
+  document.getElementById('sedit-medium').value = book.medium || '';
+  document.getElementById('sedit-review').value = book.review || '';
+  const isEbookBook = isEbook(book.medium);
+  const label = document.getElementById('sedit-page-label');
+  const input = document.getElementById('sedit-current');
+  if (isEbookBook && book.pages) {
+    label.textContent = '진행률 (%)';
+    input.max = 100;
+    input.value = pageToPct(book.currentPage || 0, book.pages);
+  } else {
+    label.textContent = '현재 페이지';
+    input.max = book.pages || 99999;
+    input.value = book.currentPage || 0;
+  }
+  document.getElementById('shelf-edit-modal').classList.remove('hidden');
+}
+
+function closeShelfEditModal() {
+  document.getElementById('shelf-edit-modal').classList.add('hidden');
+  editingShelfId = null;
+}
+
+function saveShelfEdit() {
+  const book = db.shelf.find(b => b.id === editingShelfId);
+  if (!book) return;
+  book.status = document.getElementById('sedit-status').value;
+  const rawVal = parseInt(document.getElementById('sedit-current').value) || 0;
+  const isEbookBook = isEbook(document.getElementById('sedit-medium').value);
+  book.currentPage = (isEbookBook && book.pages) ? pctToPage(rawVal, book.pages) : rawVal;
+  book.startDate = document.getElementById('sedit-start').value;
+  book.endDate = document.getElementById('sedit-end').value;
+  book.rating = document.getElementById('sedit-rating').value;
+  book.medium = document.getElementById('sedit-medium').value;
+  book.review = document.getElementById('sedit-review').value.trim();
+  book.updatedAt = new Date().toISOString();
+  logReadingProgress(editingShelfId, book.currentPage);
+  const plan = db.plans.find(p => p.shelfId === editingShelfId);
+  if (plan) plan.currentPage = book.currentPage;
+  save(); renderShelf(); renderPlan();
+  closeShelfEditModal();
+}
+
+document.getElementById('shelf-edit-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeShelfEditModal();
+});
+
+document.getElementById('ebook-done-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeEbookDoneModal();
+});
+
+document.getElementById('plan-delete-modal').addEventListener('click', function(e) {
+  if (e.target === this) closePlanDeleteModal();
+});
+
+document.getElementById('chart-delete-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeChartDeleteModal();
+});
+
+function renderAll() {
+  renderPlan();
+  renderWishlist();
+  renderShelf();
+  populateMemoBookSelect();
+  renderMemos();
+}
+
+// ==================== 책장 책 정보 수정 ====================
+let editingShelfBookInfoId = null;
+
+function openShelfBookInfoModal(id) {
+  const book = db.shelf.find(b => b.id === id);
+  if (!book) return;
+  editingShelfBookInfoId = id;
+  document.getElementById('sbi-title').value = book.title || '';
+  document.getElementById('sbi-author').value = book.author || '';
+  document.getElementById('sbi-publisher').value = book.publisher || '';
+  document.getElementById('sbi-pages').value = book.pages || '';
+  document.getElementById('sbi-medium').value = book.medium || '';
+  document.getElementById('sbi-cover').value = book.cover || '';
+  previewSbiCover(book.cover || '');
+  document.getElementById('shelf-book-info-modal').classList.remove('hidden');
+}
+
+function closeShelfBookInfoModal() {
+  document.getElementById('shelf-book-info-modal').classList.add('hidden');
+  editingShelfBookInfoId = null;
+}
+
+function previewSbiCover(url) {
+  const el = document.getElementById('sbi-cover-preview');
+  if (!url) { el.innerHTML = '📚'; return; }
+  el.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML='❌'">`;
+}
+
+function saveShelfBookInfo() {
+  const book = db.shelf.find(b => b.id === editingShelfBookInfoId);
+  if (!book) return;
+  book.title = document.getElementById('sbi-title').value.trim() || book.title;
+  book.author = document.getElementById('sbi-author').value.trim();
+  book.publisher = document.getElementById('sbi-publisher').value.trim();
+  book.pages = parseInt(document.getElementById('sbi-pages').value) || book.pages;
+  book.medium = document.getElementById('sbi-medium').value;
+  book.cover = document.getElementById('sbi-cover').value.trim();
+  // 독서 계획에도 반영
+  const plan = db.plans.find(p => p.shelfId === editingShelfBookInfoId);
+  if (plan) { plan.title = book.title; plan.pages = book.pages; }
+  closeShelfBookInfoModal();
+  save(); renderShelf();
+}
+
+document.getElementById('shelf-book-info-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeShelfBookInfoModal();
+});
+
+// ==================== 전자책 진행률 ====================
+let ebookModalCallback = null;
+let _ebookModalOpenedAt = 0;
+
+function openEbookModal(title, currentPct, sub, callback) {
+  document.getElementById('ebook-modal-title').textContent = title;
+  document.getElementById('ebook-modal-sub').textContent = sub || '';
+  document.getElementById('ebook-pct-input').value = currentPct;
+  ebookModalCallback = callback;
+  _ebookModalOpenedAt = Date.now();
+  document.getElementById('ebook-progress-modal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('ebook-pct-input').focus(), 100);
+}
+
+function closeEbookModal() {
+  document.getElementById('ebook-progress-modal').classList.add('hidden');
+  ebookModalCallback = null;
+}
+
+function saveEbookProgress() {
+  const pct = Math.min(100, Math.max(0, parseInt(document.getElementById('ebook-pct-input').value) || 0));
+  const cb = ebookModalCallback;
+  closeEbookModal();
+  if (cb) cb(pct);
+}
+
+document.getElementById('ebook-progress-modal').addEventListener('click', function(e) {
+  if (e.target === this && Date.now() - _ebookModalOpenedAt > 300) closeEbookModal();
+});
+
+function isEbook(medium) { return medium === 'ebook'; }
+function pctToPage(pct, totalPages) { return Math.round(totalPages * pct / 100); }
+function pageToPct(page, totalPages) { return totalPages ? Math.round(page / totalPages * 100) : 0; }
+
+let readingChartInstance = null;
+
+let currentChartBookId = null;
+let currentChartDates = [];
+let currentChartLog = {};
+let editingChartDate = null;
+
+function openReadingChart(bookId) {
+  const book = db.shelf.find(b => b.id === bookId);
+  if (!book) return;
+  currentChartBookId = bookId;
+  document.getElementById('chart-book-title').textContent = book.title;
+  document.getElementById('reading-chart-modal').classList.remove('hidden');
+  document.getElementById('chart-edit-panel').classList.add('hidden');
+  renderReadingChart();
+}
+
+function renderReadingChart() {
+  const bookId = currentChartBookId;
+  const log = db.readingLog[bookId] || {};
+  currentChartLog = log;
+  const dates = Object.keys(log).sort();
+  currentChartDates = dates;
+
+  if (dates.length === 0) {
+    document.getElementById('reading-chart').classList.add('hidden');
+    document.getElementById('chart-empty').classList.remove('hidden');
+    document.getElementById('chart-stats').innerHTML = '';
+    return;
+  }
+
+  document.getElementById('reading-chart').classList.remove('hidden');
+  document.getElementById('chart-empty').classList.add('hidden');
+
+  const dailyPages = dates.map((date, i) => {
+    const prev = i === 0 ? 0 : log[dates[i-1]];
+    return Math.max(0, log[date] - prev);
+  });
+
+  const total = dailyPages.reduce((s, p) => s + p, 0);
+  const avg = dates.length > 0 ? Math.round(total / dates.length) : 0;
+  const max = Math.max(...dailyPages);
+  const latest = log[dates[dates.length-1]] || 0;
+
+  document.getElementById('chart-stats').innerHTML = `
+    <div class="stat" style="flex:1; min-width:80px">
+      <div class="stat-label">현재</div>
+      <div class="stat-val" style="font-size:18px">${latest}</div>
+      <div class="stat-sub">페이지</div>
+    </div>
+    <div class="stat" style="flex:1; min-width:80px">
+      <div class="stat-label">총 읽은</div>
+      <div class="stat-val" style="font-size:18px">${total}</div>
+      <div class="stat-sub">페이지</div>
+    </div>
+    <div class="stat" style="flex:1; min-width:80px">
+      <div class="stat-label">일평균</div>
+      <div class="stat-val" style="font-size:18px">${avg}</div>
+      <div class="stat-sub">페이지</div>
+    </div>
+    <div class="stat" style="flex:1; min-width:80px">
+      <div class="stat-label">기록일</div>
+      <div class="stat-val" style="font-size:18px">${dates.length}</div>
+      <div class="stat-sub">일</div>
+    </div>`;
+
+  if (readingChartInstance) { readingChartInstance.destroy(); readingChartInstance = null; }
+
+  const book = db.shelf.find(b => b.id === bookId);
+  const totalPages = book ? book.pages : 0;
+
+  const ctx = document.getElementById('reading-chart').getContext('2d');
+  readingChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: dates.map(d => d.slice(5)),
+      datasets: [
+        {
+          label: '누적 페이지',
+          data: dates.map(d => log[d]),
+          borderColor: '#1a1a1a',
+          backgroundColor: 'rgba(26,26,26,0.06)',
+          borderWidth: 2,
+          pointRadius: dates.map(d => d === editingChartDate ? 7 : 4),
+          pointBackgroundColor: dates.map(d => d === editingChartDate ? '#1a73e8' : '#1a1a1a'),
+          tension: 0.3,
+          fill: true
+        },
+        ...(totalPages ? [{
+          label: '목표',
+          data: dates.map(() => totalPages),
+          borderColor: 'rgba(0,0,0,0.15)',
+          borderWidth: 1,
+          borderDash: [4, 4],
+          pointRadius: 0,
+          fill: false
+        }] : [])
+      ]
+    },
+    options: {
+      responsive: true,
+      onClick: (e, elements) => {
+        if (elements.length > 0) {
+          const idx = elements[0].index;
+          openChartEdit(dates[idx], log[dates[idx]], idx > 0 ? log[dates[idx-1]] : 0);
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: { label: ctx => ctx.dataset.label === '목표' ? `목표: ${ctx.parsed.y}p` : `누적: ${ctx.parsed.y}p` }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: totalPages ? totalPages * 1.05 : undefined,
+          grid: { color: 'rgba(0,0,0,0.05)' }
+        },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+}
+
+function openChartEdit(date, currentCumulative, prevCumulative) {
+  editingChartDate = date;
+  const book = db.shelf.find(b => b.id === currentChartBookId);
+  const isEbookBook = book && isEbook(book.medium) && book.pages;
+  const input = document.getElementById('chart-edit-input');
+
+  document.getElementById('chart-edit-date').textContent = date;
+  if (isEbookBook) {
+    const curPct = pageToPct(currentCumulative, book.pages);
+    const prevPct = pageToPct(prevCumulative, book.pages);
+    document.getElementById('chart-edit-desc').textContent =
+      `전날 누적: ${prevPct}% / 현재 기록: ${curPct}% (${curPct - prevPct}% 읽음)`;
+    document.getElementById('chart-edit-label').textContent = '해당일 누적 진행률 (%)';
+    input.max = 100;
+    input.value = curPct;
+  } else {
+    document.getElementById('chart-edit-desc').textContent =
+      `전날 누적: ${prevCumulative}p / 현재 기록: ${currentCumulative}p (${currentCumulative - prevCumulative}p 읽음)`;
+    document.getElementById('chart-edit-label').textContent = '해당일 누적 페이지';
+    input.max = book ? book.pages : 99999;
+    input.value = currentCumulative;
+  }
+  document.getElementById('chart-edit-panel').classList.remove('hidden');
+  input.focus();
+  renderReadingChart();
+}
+
+function openChartAddDate() {
+  const date = document.getElementById('chart-add-date').value;
+  if (!date) { alert('날짜를 선택해주세요'); return; }
+  const log = db.readingLog[currentChartBookId] || {};
+  const dates = Object.keys(log).sort();
+  const idx = dates.indexOf(date);
+  const prevDate = dates.filter(d => d < date).pop();
+  const prevVal = prevDate ? log[prevDate] : 0;
+  const currentVal = log[date] || prevVal;
+  openChartEdit(date, currentVal, prevVal);
+  if (!log[date]) {
+    if (!db.readingLog[currentChartBookId]) db.readingLog[currentChartBookId] = {};
+    db.readingLog[currentChartBookId][date] = prevVal;
+    currentChartLog = db.readingLog[currentChartBookId];
+    currentChartDates = Object.keys(currentChartLog).sort();
+  }
+}
+
+function cancelChartEdit() {
+  editingChartDate = null;
+  document.getElementById('chart-edit-panel').classList.add('hidden');
+  renderReadingChart();
+}
+
+function deleteChartDate() {
+  const date = editingChartDate;
+  if (!date) return;
+  document.getElementById('chart-delete-title').textContent = date + ' 기록을 삭제할까요?';
+  document.getElementById('chart-delete-modal').classList.remove('hidden');
+}
+
+function closeChartDeleteModal() {
+  document.getElementById('chart-delete-modal').classList.add('hidden');
+}
+
+function confirmDeleteChartDate() {
+  const date = editingChartDate;
+  if (!date) return;
+  closeChartDeleteModal();
+  delete db.readingLog[currentChartBookId][date];
+  currentChartLog = db.readingLog[currentChartBookId];
+  currentChartDates = Object.keys(currentChartLog).sort();
+  const allDates = Object.keys(db.readingLog[currentChartBookId]).sort();
+  const latestPage = allDates.length > 0 ? db.readingLog[currentChartBookId][allDates[allDates.length-1]] : 0;
+  const book = db.shelf.find(b => b.id === currentChartBookId);
+  if (book) { book.currentPage = latestPage; book.updatedAt = new Date().toISOString(); }
+  const plan = db.plans.find(p => p.shelfId === currentChartBookId);
+  if (plan) { plan.currentPage = latestPage; }
+  editingChartDate = null;
+  document.getElementById('chart-edit-panel').classList.add('hidden');
+  save(); renderReadingChart(); renderShelf(); renderPlan();
+}
+
+function saveChartEdit() {
+  const date = editingChartDate;
+  const book = db.shelf.find(b => b.id === currentChartBookId);
+  const isEbookBook = book && isEbook(book.medium) && book.pages;
+  const rawVal = parseInt(document.getElementById('chart-edit-input').value);
+
+  if (isNaN(rawVal) || rawVal < 0) {
+    alert(isEbookBook ? '올바른 진행률(0~100)을 입력해주세요' : '올바른 페이지 수를 입력해주세요');
+    return;
+  }
+
+  const newVal = isEbookBook ? pctToPage(rawVal, book.pages) : rawVal;
+  const dates = currentChartDates;
+  const idx = dates.indexOf(date);
+  const prevVal = idx > 0 ? currentChartLog[dates[idx-1]] : 0;
+
+  if (newVal < prevVal) {
+    const prevDisp = isEbookBook ? pageToPct(prevVal, book.pages) + '%' : prevVal + 'p';
+    alert(`전날 누적(${prevDisp})보다 작을 수 없어요`);
+    return;
+  }
+
+  // 다음날 기록보다 크면 자동 조정
+  if (idx < dates.length - 1 && newVal > currentChartLog[dates[idx+1]]) {
+    for (let i = idx+1; i < dates.length; i++) {
+      if (currentChartLog[dates[i]] < newVal) db.readingLog[currentChartBookId][dates[i]] = newVal;
+    }
+  }
+
+  db.readingLog[currentChartBookId][date] = newVal;
+  const allDates = Object.keys(db.readingLog[currentChartBookId]).sort();
+  const latestPage = db.readingLog[currentChartBookId][allDates[allDates.length-1]];
+
+  if (book) { book.currentPage = latestPage; book.updatedAt = new Date().toISOString(); }
+
+  const plan = db.plans.find(p => p.shelfId === currentChartBookId);
+  if (plan) {
+    plan.currentPage = latestPage;
+    const target = (plan.allocStartPage||0) + (plan.dailyAlloc||0);
+    if (latestPage >= target) plan.todayDone = true;
+    db.plans.forEach(p => p.allocDate = '');
+    refreshDailyAlloc();
+  }
+
+  editingChartDate = null;
+  document.getElementById('chart-edit-panel').classList.add('hidden');
+  save();
+  currentChartLog = db.readingLog[currentChartBookId] || {};
+  currentChartDates = Object.keys(currentChartLog).sort();
+  renderReadingChart(); renderShelf(); renderPlan();
+}
+
+function closeReadingChart() {
+  document.getElementById('reading-chart-modal').classList.add('hidden');
+  if (readingChartInstance) { readingChartInstance.destroy(); readingChartInstance = null; }
+  currentChartBookId = null;
+  editingChartDate = null;
+}
+
+document.getElementById('reading-chart-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeReadingChart();
+});
+
+// ==================== 통계 ====================
+let statsCharts = {};
+
+function renderStats() {
+  const done = db.shelf.filter(b => b.status === 'done');
+  const all = db.shelf;
+  const thisYear = String(new Date().getFullYear());
+
+  // 요약 카드
+  const thisYearDone = done.filter(b => b.endDate && b.endDate.startsWith(thisYear));
+  document.getElementById('stats-summary').innerHTML = `
+    <div class="stat"><div class="stat-label">전체 완독</div><div class="stat-val">${done.length}</div><div class="stat-sub">권</div></div>
+    <div class="stat"><div class="stat-label">${thisYear}년 완독</div><div class="stat-val">${thisYearDone.length}</div><div class="stat-sub">권</div></div>
+    <div class="stat"><div class="stat-label">읽는 중</div><div class="stat-val">${all.filter(b=>b.status==='reading').length}</div><div class="stat-sub">권</div></div>
+    <div class="stat"><div class="stat-label">전체 책장</div><div class="stat-val">${all.length}</div><div class="stat-sub">권</div></div>`;
+
+  // 연도 선택
+  const years = [...new Set(done.map(b => b.endDate?.slice(0,4)).filter(Boolean))].sort().reverse();
+  if (!years.includes(thisYear)) years.unshift(thisYear);
+  const sel = document.getElementById('stats-year-select');
+  const curYear = sel.value || thisYear;
+  sel.innerHTML = years.map(y => `<option value="${y}" ${y===curYear?'selected':''}>${y}년</option>`).join('');
+
+  // 월별 완독
+  const yearDone = done.filter(b => b.endDate?.startsWith(curYear));
+  const monthly = Array(12).fill(0);
+  yearDone.forEach(b => { const m = parseInt(b.endDate.slice(5,7))-1; monthly[m]++; });
+  const hasMonthly = monthly.some(v=>v>0);
+  const monthCanvas = document.getElementById('chart-monthly');
+  const monthEmpty = document.getElementById('chart-monthly-empty');
+  if (!hasMonthly) {
+    monthCanvas.classList.add('hidden'); monthEmpty.classList.remove('hidden');
+    if (statsCharts['monthly']) { statsCharts['monthly'].destroy(); delete statsCharts['monthly']; }
+  } else {
+    monthCanvas.classList.remove('hidden'); monthEmpty.classList.add('hidden');
+    if (statsCharts['monthly']) statsCharts['monthly'].destroy();
+    statsCharts['monthly'] = new Chart(monthCanvas.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],
+        datasets: [{ data: monthly, backgroundColor: '#1a1a1a', borderRadius: 4, borderSkipped: false }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: 'rgba(0,0,0,0.05)' } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  // 카테고리 비율
+  const catCount = {};
+  all.forEach(b => (b.categories||[]).forEach(c => { catCount[c] = (catCount[c]||0)+1; }));
+  renderPieChart('chart-category', 'chart-category-empty', catCount);
+
+  // 매체 비율
+  const mediumLabel = { paper:'종이책', ebook:'전자책', audio:'오디오북' };
+  const mediumCount = {};
+  [...db.wishlist, ...db.shelf].forEach(b => {
+    if (b.medium) {
+      const label = mediumLabel[b.medium] || b.medium;
+      mediumCount[label] = (mediumCount[label]||0)+1;
+    }
+  });
+  renderPieChart('chart-medium', 'chart-medium-empty', mediumCount);
+
+  // 출판사별 완독
+  const pubCount = {};
+  done.forEach(b => { if (b.publisher) pubCount[b.publisher] = (pubCount[b.publisher]||0)+1; });
+  const sorted = Object.entries(pubCount).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const maxPub = sorted[0]?.[1] || 1;
+  document.getElementById('stats-publisher-list').innerHTML = sorted.length === 0
+    ? '<div style="text-align:center;padding:1rem;color:var(--text3);font-size:12px">완독한 책의 출판사 정보가 없어요</div>'
+    : sorted.map(([pub, cnt]) => `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div style="font-size:13px;min-width:80px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${pub}</div>
+        <div style="flex:1;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden">
+          <div style="width:${Math.round(cnt/maxPub*100)}%;height:100%;background:var(--accent);border-radius:3px"></div>
+        </div>
+        <div style="font-size:12px;color:var(--text2);min-width:20px;text-align:right">${cnt}권</div>
+      </div>`).join('');
+}
+
+function renderPieChart(canvasId, emptyId, dataObj) {
+  const entries = Object.entries(dataObj).filter(([,v])=>v>0);
+  const canvasEl = document.getElementById(canvasId);
+  const emptyEl = document.getElementById(emptyId);
+  if (statsCharts[canvasId]) { statsCharts[canvasId].destroy(); delete statsCharts[canvasId]; }
+  if (entries.length === 0) {
+    canvasEl.classList.add('hidden'); emptyEl.classList.remove('hidden');
+    return;
+  }
+  canvasEl.classList.remove('hidden'); emptyEl.classList.add('hidden');
+  const colors = ['#1a1a1a','#555','#888','#aaa','#ccc','#444','#777','#999','#bbb','#ddd'];
+  statsCharts[canvasId] = new Chart(canvasEl.getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: entries.map(([k])=>k),
+      datasets: [{ data: entries.map(([,v])=>v), backgroundColor: colors.slice(0,entries.length), borderWidth: 2, borderColor: '#fff' }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 8, boxWidth: 12 } } }
+    }
+  });
+}
+
+function initApp() {
+  // ESC 키로 열린 모달 닫기
+  document.addEventListener('keydown', function(e) {
+    if (e.key !== 'Escape') return;
+    const modals = [
+      { id: 'shelf-memo-panel', fn: closeShelfMemoPanel },
+      { id: 'memo-edit-modal', fn: closeMemoEditModal },
+      { id: 'wish-edit-modal', fn: closeWishEditModal },
+      { id: 'shelf-edit-modal', fn: closeShelfEditModal },
+      { id: 'shelf-book-info-modal', fn: closeShelfBookInfoModal },
+      { id: 'reading-chart-modal', fn: closeReadingChart },
+      { id: 'ebook-progress-modal', fn: closeEbookModal },
+      { id: 'ebook-done-modal', fn: closeEbookDoneModal },
+      { id: 'plan-edit-modal', fn: closePlanEditModal },
+      { id: 'plan-delete-modal', fn: closePlanDeleteModal },
+      { id: 'chart-delete-modal', fn: closeChartDeleteModal },
+      { id: 'done-modal', fn: () => document.getElementById('done-modal').classList.add('hidden') },
+    ];
+    for (const m of modals) {
+      const el = document.getElementById(m.id);
+      if (el && !el.classList.contains('hidden')) { m.fn(); break; }
+    }
+  });
+  load();
+  renderRecentTagSuggestions();
+  document.getElementById('plan-deadline').min = new Date().toISOString().split('T')[0];
+
+  // shelf-memo-panel 외부 클릭시 닫기
+  document.getElementById('shelf-memo-panel').addEventListener('click', function(e) {
+    if (e.target === this) closeShelfMemoPanel();
+  });
+}
+
+// Firebase module이 완료되면 initApp 호출
+// Firebase가 이미 완료됐으면 즉시, 아니면 콜백 등록 + 3초 타임아웃
+if (window._firebaseReady) {
+  initApp();
+} else {
+  let started = false;
+  window._waitingForFirebase = function() {
+    if (started) return;
+    started = true;
+    initApp();
+  };
+  // 3초 타임아웃 fallback
+  setTimeout(function() {
+    if (started) return;
+    started = true;
+    document.getElementById('firebase-status').textContent = '🔴 오프라인';
+    initApp();
+  }, 3000);
+}
+</script>
+</body>
+</html>
