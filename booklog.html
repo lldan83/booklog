@@ -156,8 +156,6 @@
   .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 300; display: flex; align-items: flex-start; justify-content: center; padding: 2rem 1rem; overflow-y: auto; }
   .modal { margin-top: auto; margin-bottom: auto; }
   .toast { position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:#1a1a1a; color:#fff; padding:8px 18px; border-radius:20px; font-size:13px; z-index:9999; opacity:0; transition:opacity 0.3s; pointer-events:none; white-space:nowrap; }
-  .stats-two-col { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem; }
-  @media (max-width: 600px) { .stats-two-col { grid-template-columns:1fr; } }
   .toast.show { opacity:1; }
   .modal { background: var(--bg); border-radius: var(--radius); padding: 1.5rem; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; box-shadow: 0 8px 40px rgba(0,0,0,0.12); }
   .modal-title { font-size: 16px; font-weight: 600; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; }
@@ -320,10 +318,10 @@
       <!-- 책 추가 패널 -->
       <div class="add-panel">
         <div class="add-panel-title">
-          새 책 추가
-          <button class="btn btn-ghost btn-sm" onclick="togglePanel('add-wish-form')">펼치기 ▼</button>
+          책 추가
+          <button class="btn btn-ghost btn-sm" onclick="togglePanel('add-wish-form')">접기 ▲</button>
         </div>
-        <div id="add-wish-form" class="hidden">
+        <div id="add-wish-form">
           <!-- 검색 -->
           <div class="form-group" style="margin-bottom:10px">
             <label>제목으로 검색 (Google Books)</label>
@@ -563,65 +561,36 @@
     <!-- ===== 통계 ===== -->
     <div class="section" id="section-stats">
       <div class="page-title">통계</div>
-      <div class="page-sub">나의 독서 기록을 한눈에</div>
+      <div class="page-sub" id="stats-sub">완독한 책 기준으로 집계해요</div>
 
-      <div class="stats-row" id="stats-summary" style="margin-bottom:1.5rem"></div>
+      <div class="stats-row" id="stats-summary" style="margin-bottom:2rem"></div>
 
-      <!-- 연도/월 필터 -->
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap">
-        <select id="stats-year-select" onchange="renderStats()" style="font-size:12px;padding:5px 10px;width:auto;border-radius:20px">
-        </select>
-        <select id="stats-month-select" onchange="renderStats()" style="font-size:12px;padding:5px 10px;width:auto;border-radius:20px">
-          <option value="all">전체 (연 단위)</option>
-          <option value="1">1월</option><option value="2">2월</option><option value="3">3월</option>
-          <option value="4">4월</option><option value="5">5월</option><option value="6">6월</option>
-          <option value="7">7월</option><option value="8">8월</option><option value="9">9월</option>
-          <option value="10">10월</option><option value="11">11월</option><option value="12">12월</option>
-        </select>
-      </div>
-
-      <!-- 독서 달력 -->
-      <div class="card" style="margin-bottom:1rem">
-        <div style="font-size:13px;font-weight:600;margin-bottom:1rem" id="stats-cal-title">독서 달력</div>
-        <div style="overflow-x:auto">
-          <table id="stats-cal-table" style="border-collapse:collapse;font-size:11px;min-width:600px;width:100%">
-            <thead id="stats-cal-head"></thead>
-            <tbody id="stats-cal-body"></tbody>
-          </table>
-        </div>
-        <div id="stats-cal-empty" class="hidden" style="text-align:center;padding:2rem;color:var(--text3);font-size:12px">이 기간에 독서 기록이 없어요</div>
-        <div style="display:flex;gap:12px;margin-top:10px;font-size:11px;color:var(--text3);align-items:center">
-          <div style="display:flex;align-items:center;gap:5px"><div style="width:12px;height:12px;border-radius:2px;background:#1a1a1a"></div> 읽은 날</div>
-          <div style="display:flex;align-items:center;gap:5px"><div style="width:12px;height:12px;border-radius:2px;background:var(--bg3);border:1px solid var(--border)"></div> 기록 없음</div>
-        </div>
-      </div>
-
-      <!-- 매체 비율 -->
-      <div class="card" style="margin-bottom:1rem">
-        <div style="font-size:13px;font-weight:600;margin-bottom:1rem">매체 비율</div>
-        <div id="stats-medium-cards" style="display:flex;gap:10px;flex-wrap:wrap"></div>
-        <div id="stats-medium-empty" class="hidden" style="text-align:center;padding:2rem;color:var(--text3);font-size:12px">데이터 없음</div>
-      </div>
-
-      <!-- 카테고리 + 출판사 2단 -->
-      <div class="stats-two-col">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.5rem">
         <div class="card">
-          <div style="font-size:13px;font-weight:600;margin-bottom:1rem">카테고리 비율</div>
-          <div id="stats-cat-bars"></div>
-          <div id="stats-cat-empty" class="hidden" style="text-align:center;padding:2rem;color:var(--text3);font-size:12px">데이터 없음</div>
+          <div class="sec-header-title" style="margin-bottom:1rem; font-size:13px; font-weight:600">카테고리 비율</div>
+          <canvas id="chart-category" height="200"></canvas>
+          <div id="chart-category-empty" class="hidden" style="text-align:center;padding:2rem;color:var(--text3);font-size:12px">데이터 없음</div>
         </div>
         <div class="card">
-          <div style="font-size:13px;font-weight:600;margin-bottom:1rem">출판사별 완독 Top5</div>
-          <canvas id="chart-publisher" height="180"></canvas>
-          <div id="chart-publisher-empty" class="hidden" style="text-align:center;padding:2rem;color:var(--text3);font-size:12px">데이터 없음</div>
+          <div class="sec-header-title" style="margin-bottom:1rem; font-size:13px; font-weight:600">매체 비율</div>
+          <canvas id="chart-medium" height="200"></canvas>
+          <div id="chart-medium-empty" class="hidden" style="text-align:center;padding:2rem;color:var(--text3);font-size:12px">데이터 없음</div>
         </div>
       </div>
 
-      <!-- 월별 완독 (연 단위 고정) -->
-      <div class="card">
-        <div style="font-size:13px;font-weight:600;margin-bottom:1rem">월별 완독 <span style="font-size:11px;color:var(--text3);font-weight:400">— 연 단위 고정</span></div>
+      <div class="card" style="margin-bottom:1rem">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem">
+          <div style="font-size:13px; font-weight:600">월별 완독</div>
+          <select id="stats-year-select" onchange="renderStats()" style="font-size:12px;padding:4px 8px;width:auto">
+          </select>
+        </div>
         <canvas id="chart-monthly" height="160"></canvas>
         <div id="chart-monthly-empty" class="hidden" style="text-align:center;padding:2rem;color:var(--text3);font-size:12px">완독한 책이 없어요</div>
+      </div>
+
+      <div class="card">
+        <div style="font-size:13px; font-weight:600; margin-bottom:1rem">출판사별 완독</div>
+        <div id="stats-publisher-list"></div>
       </div>
     </div>
 
@@ -1125,19 +1094,6 @@
   window.firebaseSave = function(data) {
     _pendingSave = data;
     if (!_saveInProgress) _doSave(data);
-  };
-
-  // Firebase에서 현재 데이터를 읽어서 콜백으로 전달 (polling용)
-  window.firebaseLoad = function(callback) {
-    fetch(REST_URL + '?key=' + API_KEY)
-    .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-    .then(function(d) {
-      try {
-        var cloudData = JSON.parse(d.fields.payload.stringValue);
-        callback(cloudData);
-      } catch(e) { callback(null); }
-    })
-    .catch(function() { callback(null); });
   };
 
   // 페이지 숨김/종료 시 keepalive로 강제 저장
@@ -1661,6 +1617,12 @@ function moveToShelf(id) {
   };
   db.shelf.push(shelf);
   db.wishlist = db.wishlist.filter(b => b.id !== id);
+  // 같은 책이 독서 계획에 있으면 shelfId 연결
+  const linkedPlan = db.plans.find(p => p.wishId === id || (!p.shelfId && p.title === book.title));
+  if (linkedPlan) {
+    linkedPlan.shelfId = shelf.id;
+    linkedPlan.currentPage = 0;
+  }
   save(); renderWishlist();
   alert(`"${book.title}"을 책장으로 옮겼어요. (읽는 중)`);
 }
@@ -1677,7 +1639,7 @@ function quickAddToPlan(wishId) {
   if (toggleBtn) toggleBtn.textContent = '접기 ▲';
   setTimeout(() => {
     populatePlanBookSelect();
-    document.getElementById('plan-book-select').value = wishId;
+    document.getElementById('plan-book-select').value = 'wish_' + wishId;
     onPlanBookSelect();
   }, 50);
 }
@@ -2000,59 +1962,30 @@ function todayStr() {
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 }
 
-// 자정 자동 감지 - 날짜 바뀌면 독서계획 재계산 (save 제거: 자동 저장이 다른 창 데이터를 덮어씌우는 버그 방지)
+// 자정 자동 감지 - 날짜 바뀌면 독서계획 재계산
 let _lastCheckedDate = todayStr();
 setInterval(function() {
   const now = todayStr();
   if (now !== _lastCheckedDate) {
     _lastCheckedDate = now;
     refreshDailyAlloc();
+    save();
     renderPlan();
   }
 }, 60000);
-
-// Firebase polling: 5분마다 _savedAt 비교해서 다른 창/기기에서 저장한 게 있으면 자동 반영
-let _lastUserAction = Date.now();
-document.addEventListener('click', () => { _lastUserAction = Date.now(); });
-document.addEventListener('keydown', () => { _lastUserAction = Date.now(); });
-
-setInterval(function() {
-  // 사용자가 30초 이내에 입력한 경우 건너뜀 (입력 중 덮어씌움 방지)
-  if (Date.now() - _lastUserAction < 30000) return;
-  if (!window.firebaseLoad) return;
-  window.firebaseLoad(function(cloudData) {
-    if (!cloudData || !cloudData._savedAt) return;
-    if (cloudData._savedAt > (db._savedAt || '')) {
-      db = cloudData;
-      localStorage.setItem('booklog_data', JSON.stringify(db));
-      window._lastSavedDb = db;
-      updateBadges();
-      // 현재 보고 있는 탭 리렌더
-      const active = document.querySelector('.section:not(.hidden)');
-      if (active) {
-        const id = active.id;
-        if (id === 'section-plan') { refreshDailyAlloc(); renderPlan(); }
-        else if (id === 'section-wishlist') renderWishlist();
-        else if (id === 'section-shelf') renderShelf();
-        else if (id === 'section-memo') renderMemo();
-        else if (id === 'section-stats') renderStats();
-      }
-      showToast('☁️ 최신 데이터로 업데이트됐어요');
-    }
-  });
-}, 5 * 60 * 1000);
 function daysUntil(dateStr) { return Math.ceil((toDate(dateStr) - todayDate()) / 86400000); }
 
 function calcCMPDailyTotal(plans) {
   if (plans.length === 0) return 0;
-  // CMP 계산은 드래그 순서(우선순위) 기준으로 누적 — 앞 순위 책을 먼저 읽어야 하므로
-  const totalRemaining = plans.reduce((s, p) => s + Math.max(0, (p.pages||0) - (p.currentPage||0)), 0);
-  const farthest = plans.reduce((far, p) => p.deadline > far ? p.deadline : far, plans[0].deadline);
+  // CMP 계산은 마감일 오름차순으로 해야 정확함 (드래그 순서와 무관)
+  const sorted = [...plans].sort((a, b) => a.deadline.localeCompare(b.deadline));
+  const totalRemaining = sorted.reduce((s, p) => s + Math.max(0, (p.pages||0) - (p.currentPage||0)), 0);
+  const farthest = sorted[sorted.length - 1].deadline;
   const floorDays = Math.max(1, daysUntil(farthest) + 1);
   const floor = Math.ceil(totalRemaining / floorDays);
   let cumulative = 0;
   let cmp = 0;
-  plans.forEach(p => {
+  sorted.forEach(p => {
     const remaining = Math.max(0, (p.pages||0) - (p.currentPage||0));
     cumulative += remaining;
     const dLeft = Math.max(1, daysUntil(p.deadline) + 1);
@@ -3342,7 +3275,12 @@ function saveChartEdit() {
 
   if (book) { book.currentPage = latestPage; book.updatedAt = new Date().toISOString(); }
 
-  const plan = db.plans.find(p => p.shelfId === currentChartBookId);
+  // shelfId로 plan 찾기, 없으면 제목으로 찾아서 shelfId 연결
+  let plan = db.plans.find(p => p.shelfId === currentChartBookId);
+  if (!plan && book) {
+    plan = db.plans.find(p => !p.shelfId && p.title === book.title);
+    if (plan) plan.shelfId = currentChartBookId;
+  }
   if (plan) {
     plan.currentPage = latestPage;
     const target = (plan.allocStartPage||0) + (plan.dailyAlloc||0);
@@ -3377,35 +3315,6 @@ function renderStats() {
   const done = db.shelf.filter(b => b.status === 'done');
   const all = db.shelf;
   const thisYear = String(new Date().getFullYear());
-  const thisMonth = new Date().getMonth() + 1;
-
-  // 연도 선택
-  const years = [...new Set(done.map(b => b.endDate?.slice(0,4)).filter(Boolean))].sort().reverse();
-  if (!years.includes(thisYear)) years.unshift(thisYear);
-  const yearSel = document.getElementById('stats-year-select');
-  const curYear = yearSel.value || thisYear;
-  yearSel.innerHTML = years.map(y => `<option value="${y}" ${y===curYear?'selected':''}>${y}년</option>`).join('');
-
-  // 월 선택
-  const monthSel = document.getElementById('stats-month-select');
-  const curMonth = monthSel.value || 'all'; // 'all' 또는 '1'~'12'
-
-  // 필터 기준 데이터
-  function matchesPeriod(b) {
-    if (!b.endDate) return false;
-    if (!b.endDate.startsWith(curYear)) return false;
-    if (curMonth === 'all') return true;
-    return parseInt(b.endDate.slice(5,7)) === parseInt(curMonth);
-  }
-  function matchesPeriodByStart(b) {
-    // 읽기 시작 기준 (startDate)
-    if (!b.startDate) return false;
-    if (!b.startDate.startsWith(curYear)) return false;
-    if (curMonth === 'all') return true;
-    return parseInt(b.startDate.slice(5,7)) === parseInt(curMonth);
-  }
-
-  const periodDone = done.filter(matchesPeriod);
 
   // 요약 카드
   const thisYearDone = done.filter(b => b.endDate && b.endDate.startsWith(thisYear));
@@ -3415,144 +3324,14 @@ function renderStats() {
     <div class="stat"><div class="stat-label">읽는 중</div><div class="stat-val">${all.filter(b=>b.status==='reading').length}</div><div class="stat-sub">권</div></div>
     <div class="stat"><div class="stat-label">전체 책장</div><div class="stat-val">${all.length}</div><div class="stat-sub">권</div></div>`;
 
-  // ── 독서 달력 ──
-  // 월 필터가 'all'이면 현재 월, 선택된 월이면 그 월
-  const calMonth = curMonth === 'all' ? thisMonth : parseInt(curMonth);
-  const calYear = parseInt(curYear);
-  const daysInMonth = new Date(calYear, calMonth, 0).getDate();
-  document.getElementById('stats-cal-title').textContent = `독서 달력 — ${calYear}년 ${calMonth}월`;
+  // 연도 선택
+  const years = [...new Set(done.map(b => b.endDate?.slice(0,4)).filter(Boolean))].sort().reverse();
+  if (!years.includes(thisYear)) years.unshift(thisYear);
+  const sel = document.getElementById('stats-year-select');
+  const curYear = sel.value || thisYear;
+  sel.innerHTML = years.map(y => `<option value="${y}" ${y===curYear?'selected':''}>${y}년</option>`).join('');
 
-  // readingLog에서 해당 월에 기록이 있는 책 추출
-  const calBooks = [];
-  const monthPrefix = `${calYear}-${String(calMonth).padStart(2,'0')}`;
-  Object.entries(db.readingLog || {}).forEach(([bookId, log]) => {
-    const daysLogged = Object.keys(log).filter(d => d.startsWith(monthPrefix));
-    if (daysLogged.length === 0) return;
-    const shelfBook = db.shelf.find(b => b.id === bookId);
-    const title = shelfBook ? shelfBook.title : bookId;
-    calBooks.push({ title, days: daysLogged.map(d => parseInt(d.slice(8))) });
-  });
-
-  const calHead = document.getElementById('stats-cal-head');
-  const calBody = document.getElementById('stats-cal-body');
-  const calEmpty = document.getElementById('stats-cal-empty');
-
-  if (calBooks.length === 0) {
-    calHead.innerHTML = ''; calBody.innerHTML = '';
-    calEmpty.classList.remove('hidden');
-  } else {
-    calEmpty.classList.add('hidden');
-
-    // 오늘 날짜 (같은 연월일 때만 강조)
-    const isCurrentMonth = (calYear === new Date().getFullYear() && calMonth === new Date().getMonth() + 1);
-    const todayDate = isCurrentMonth ? new Date().getDate() : -1;
-
-    calHead.innerHTML = '<tr><th style="text-align:left;padding:4px 6px;font-size:11px;color:var(--text2);font-weight:500;min-width:110px;border-bottom:1px solid var(--border)">책</th>' +
-      Array.from({length: daysInMonth}, (_, i) => i + 1).map(d => {
-        const isToday = d === todayDate;
-        return `<th style="text-align:center;padding:3px 1px;font-size:10px;border-bottom:1px solid var(--border);min-width:18px;${isToday?'font-weight:700;color:var(--text);background:rgba(0,0,0,0.06)':'color:var(--text3);font-weight:400'}">${d}</th>`;
-      }).join('') + '</tr>';
-
-    calBody.innerHTML = calBooks.map(book => {
-      let row = `<tr><td style="text-align:left;padding:3px 6px;font-size:11px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px;border-bottom:1px solid var(--border);border-right:1px solid var(--border)" title="${book.title}">${book.title}</td>`;
-      for (let d = 1; d <= daysInMonth; d++) {
-        const filled = book.days.includes(d);
-        const isToday = d === todayDate;
-        row += `<td style="padding:2px 1px;border-bottom:1px solid var(--border);${isToday?'background:rgba(0,0,0,0.06)':''}"><div style="width:14px;height:14px;border-radius:2px;margin:0 auto;background:${filled?'#1a1a1a':'var(--bg3)'}"></div></td>`;
-      }
-      row += '</tr>';
-      return row;
-    }).join('');
-
-    // 오늘 날짜 기준 자동 스크롤 (중앙 정렬)
-    if (todayDate > 0) {
-      requestAnimationFrame(() => {
-        const calWrap = document.querySelector('#stats-cal-table')?.closest('div[style*="overflow-x"]');
-        if (!calWrap) return;
-        const bookColWidth = 118; // min-width + padding
-        const cellWidth = 18;
-        const todayOffset = bookColWidth + (todayDate - 1) * cellWidth;
-        calWrap.scrollLeft = todayOffset - calWrap.offsetWidth / 2 + cellWidth / 2;
-      });
-    }
-  }
-
-  // ── 매체 비율 ──
-  const mediumLabel = { paper:'종이책', ebook:'전자책', audio:'오디오북' };
-  const mediumCount = {};
-  const mediumBase = curMonth === 'all'
-    ? [...db.wishlist, ...db.shelf]
-    : db.shelf.filter(b => matchesPeriod(b) || matchesPeriodByStart(b));
-  mediumBase.forEach(b => {
-    if (b.medium) {
-      const label = mediumLabel[b.medium] || b.medium;
-      mediumCount[label] = (mediumCount[label]||0)+1;
-    }
-  });
-  const mediumTotal = Object.values(mediumCount).reduce((s,v)=>s+v,0);
-  const mediumEntries = Object.entries(mediumCount).filter(([,v])=>v>0);
-  const mediumCards = document.getElementById('stats-medium-cards');
-  const mediumEmpty = document.getElementById('stats-medium-empty');
-  if (mediumEntries.length === 0) {
-    mediumCards.innerHTML = ''; mediumEmpty.classList.remove('hidden');
-  } else {
-    mediumEmpty.classList.add('hidden');
-    mediumCards.innerHTML = mediumEntries.map(([label, cnt]) => `
-      <div style="flex:1;min-width:80px;background:var(--bg2);border-radius:8px;padding:1rem;text-align:center">
-        <div style="font-size:26px;font-weight:600;letter-spacing:-1px">${Math.round(cnt/mediumTotal*100)}%</div>
-        <div style="font-size:12px;color:var(--text2);margin-top:2px">${label}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px">${cnt}권</div>
-      </div>`).join('');
-  }
-
-  // ── 카테고리 비율 (가로 막대) ──
-  const catCount = {};
-  const catBase = curMonth === 'all' ? all : all.filter(b => matchesPeriod(b) || matchesPeriodByStart(b));
-  catBase.forEach(b => (b.categories||[]).forEach(c => { catCount[c] = (catCount[c]||0)+1; }));
-  const catEntries = Object.entries(catCount).sort((a,b)=>b[1]-a[1]);
-  const maxCat = catEntries[0]?.[1] || 1;
-  const catBars = document.getElementById('stats-cat-bars');
-  const catEmpty = document.getElementById('stats-cat-empty');
-  if (catEntries.length === 0) {
-    catBars.innerHTML = ''; catEmpty.classList.remove('hidden');
-  } else {
-    catEmpty.classList.add('hidden');
-    catBars.innerHTML = catEntries.map(([cat, cnt]) => `
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        <div style="font-size:12px;min-width:70px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)">${cat}</div>
-        <div style="flex:1;height:7px;background:var(--bg3);border-radius:4px;overflow:hidden">
-          <div style="width:${Math.round(cnt/maxCat*100)}%;height:100%;background:#1a1a1a;border-radius:4px"></div>
-        </div>
-        <div style="font-size:12px;color:var(--text2);min-width:24px;text-align:right">${cnt}권</div>
-      </div>`).join('');
-  }
-
-  // ── 출판사별 완독 Top5 (원형) ──
-  const pubCount = {};
-  periodDone.forEach(b => { if (b.publisher) pubCount[b.publisher] = (pubCount[b.publisher]||0)+1; });
-  const pubEntries = Object.entries(pubCount).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  const pubCanvas = document.getElementById('chart-publisher');
-  const pubEmpty = document.getElementById('chart-publisher-empty');
-  if (statsCharts['publisher']) { statsCharts['publisher'].destroy(); delete statsCharts['publisher']; }
-  if (pubEntries.length === 0) {
-    pubCanvas.classList.add('hidden'); pubEmpty.classList.remove('hidden');
-  } else {
-    pubCanvas.classList.remove('hidden'); pubEmpty.classList.add('hidden');
-    const colors = ['#1a1a1a','#555','#888','#aaa','#ccc'];
-    statsCharts['publisher'] = new Chart(pubCanvas.getContext('2d'), {
-      type: 'doughnut',
-      data: {
-        labels: pubEntries.map(([k])=>k),
-        datasets: [{ data: pubEntries.map(([,v])=>v), backgroundColor: colors.slice(0,pubEntries.length), borderWidth: 2, borderColor: '#fff' }]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 8, boxWidth: 12 } } }
-      }
-    });
-  }
-
-  // ── 월별 완독 (연 단위 고정) ──
+  // 월별 완독
   const yearDone = done.filter(b => b.endDate?.startsWith(curYear));
   const monthly = Array(12).fill(0);
   yearDone.forEach(b => { const m = parseInt(b.endDate.slice(5,7))-1; monthly[m]++; });
@@ -3581,6 +3360,62 @@ function renderStats() {
       }
     });
   }
+
+  // 카테고리 비율
+  const catCount = {};
+  all.forEach(b => (b.categories||[]).forEach(c => { catCount[c] = (catCount[c]||0)+1; }));
+  renderPieChart('chart-category', 'chart-category-empty', catCount);
+
+  // 매체 비율
+  const mediumLabel = { paper:'종이책', ebook:'전자책', audio:'오디오북' };
+  const mediumCount = {};
+  [...db.wishlist, ...db.shelf].forEach(b => {
+    if (b.medium) {
+      const label = mediumLabel[b.medium] || b.medium;
+      mediumCount[label] = (mediumCount[label]||0)+1;
+    }
+  });
+  renderPieChart('chart-medium', 'chart-medium-empty', mediumCount);
+
+  // 출판사별 완독
+  const pubCount = {};
+  done.forEach(b => { if (b.publisher) pubCount[b.publisher] = (pubCount[b.publisher]||0)+1; });
+  const sorted = Object.entries(pubCount).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const maxPub = sorted[0]?.[1] || 1;
+  document.getElementById('stats-publisher-list').innerHTML = sorted.length === 0
+    ? '<div style="text-align:center;padding:1rem;color:var(--text3);font-size:12px">완독한 책의 출판사 정보가 없어요</div>'
+    : sorted.map(([pub, cnt]) => `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div style="font-size:13px;min-width:80px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${pub}</div>
+        <div style="flex:1;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden">
+          <div style="width:${Math.round(cnt/maxPub*100)}%;height:100%;background:var(--accent);border-radius:3px"></div>
+        </div>
+        <div style="font-size:12px;color:var(--text2);min-width:20px;text-align:right">${cnt}권</div>
+      </div>`).join('');
+}
+
+function renderPieChart(canvasId, emptyId, dataObj) {
+  const entries = Object.entries(dataObj).filter(([,v])=>v>0);
+  const canvasEl = document.getElementById(canvasId);
+  const emptyEl = document.getElementById(emptyId);
+  if (statsCharts[canvasId]) { statsCharts[canvasId].destroy(); delete statsCharts[canvasId]; }
+  if (entries.length === 0) {
+    canvasEl.classList.add('hidden'); emptyEl.classList.remove('hidden');
+    return;
+  }
+  canvasEl.classList.remove('hidden'); emptyEl.classList.add('hidden');
+  const colors = ['#1a1a1a','#555','#888','#aaa','#ccc','#444','#777','#999','#bbb','#ddd'];
+  statsCharts[canvasId] = new Chart(canvasEl.getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: entries.map(([k])=>k),
+      datasets: [{ data: entries.map(([,v])=>v), backgroundColor: colors.slice(0,entries.length), borderWidth: 2, borderColor: '#fff' }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 8, boxWidth: 12 } } }
+    }
+  });
 }
 
 function initApp() {
