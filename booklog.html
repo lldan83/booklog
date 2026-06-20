@@ -2279,6 +2279,7 @@ function _applyPlanProgress(id, plan, newPage) {
         db.shelf.push(shelfBook);
         plan.shelfId = shelfBook.id;
         db.wishlist = db.wishlist.filter(b => b.id !== plan.wishId);
+        logReadingProgress(shelfBook.id, newPage);
       }
     }
   } else if (plan.shelfId) {
