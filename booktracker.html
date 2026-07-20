@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>book tracker</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgMTgwIj4KICA8cmVjdCB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgZmlsbD0iIzBhMGEwYSIvPgogIDxyZWN0IHg9IjU1IiB5PSIxMTAiIHdpZHRoPSIxMiIgaGVpZ2h0PSIzNCIgcng9IjIiIGZpbGw9IiM2MGE1ZmEiLz4KICA8cmVjdCB4PSI3NSIgeT0iNzAiIHdpZHRoPSIxMiIgaGVpZ2h0PSI3NCIgcng9IjIiIGZpbGw9IiNmNDcyYjYiLz4KICA8cmVjdCB4PSI5NSIgeT0iOTAiIHdpZHRoPSIxMiIgaGVpZ2h0PSI1NCIgcng9IjIiIGZpbGw9IiNmYWNjMTUiLz4KICA8cmVjdCB4PSIxMTUiIHk9IjUyIiB3aWR0aD0iMTIiIGhlaWdodD0iOTIiIHJ4PSIyIiBmaWxsPSIjNGFkZTgwIi8+Cjwvc3ZnPgo=">
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAAABmJLR0QA/wD/AP+gvaeTAAADhElEQVR4nO3dMWsUaRzH8YkxBtesqDGnu+GwELQQBNErFE2nvomzPcsUaq31KZjS+u5ViFio1YFwzTUqRBR2jVGjxCWyxRmLu3J+u1wOZ53182n/z8Cf5cuzzcBMNBqNAspsG/UCfLvEQSQOInEQiYNIHETiIBIHkTiIxEEkDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOInEQiYNIHETiIBIHkTiIxEEkDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOou2jXmBszS4cPnL9wvSBZum0//rjkxt31x4tV7zVf+Lm+FoGlFEUxfSB5tHrF6rcZwvE8bUMKOPfAwd3V7PJlomDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOovF/E+z8oZO3Fi63du0rnXZ77648vHP/5Z8Vb1UL439z3Dz3SyqjKIr2zOythctV7lMj4x9He2Z28IH5mf3VbFI74x8HWyYOInEQiYNIHETiIBIHkTiIxEEkDiJxEImDSBxE4iASB5E4iMRBNP7vkP4fF09PLl2dbs1NlE67bzYXf+3f++PvireqjJtjkNu5jKIo2nMTS9emq9ynYuIYpJ3L+Mf8D0MO1Jo4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOInEQiYNIHETiIBIHkTiI6vEOaev4xVOXlnbuaZVON953H/+2uPLXvYq3Gnv1uDlO/nw7lVEURWNv+9SlpSr3+U7UI47G3vaQA/vmq9nku1KPOBgJcRCJg0gcROIgEgeROIjEQSQOInEQiYNIHETiIBIHkTiIxEEkDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgqkccG++7Qw6sddKo23s3+NlO72189s3mkGdX44H+64+Dn+2vrA8+MHKTU1NTo95huPVXT+eOnp3a2Sydbqx1Hv++2FtdLp0++9A50zrW3NEonXZ6b688uPN8faV0+vTF57MnJpu7yr/V1VndXLzZX+6U97HxfG3PTz9unyn/CFx/Zf3JjbufXn4onX4jJhqN8l8N6vG3wkiIg0gcROIgEgeROIjEQSQOInEQiYNIHETiIBIHkTiIxEEkDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOInEQiYNIHERfAOHRcr58VVCuAAAAAElFTkSuQmCC">
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0;
+    background: #0a0a0a;
+    color: #e5e5e5;
+    font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
+    min-height: 100vh;
+  }
+  #app { max-width: 480px; margin: 0 auto; padding: 24px 16px 100px; }
+
+  /* ---- header ---- */
+  .goal-label { font-size: 11px; color: #6b7280; letter-spacing: 1px; margin-bottom: 4px; }
+  .goal-number { font-size: 40px; font-weight: 500; color: #f5f5f5; line-height: 1; margin-bottom: 6px; }
+  .goal-number span { font-size: 18px; color: #a3a3a3; font-weight: 400; }
+  .goal-sub { font-size: 12px; color: #6b7280; margin-bottom: 4px; }
+  .goal-progress { font-size: 12px; color: #a3a3a3; margin-bottom: 20px; }
+  .sync-status { font-size: 11px; color: #525252; }
+
+  .divider { height: 1px; background: #262626; margin: 16px 0; }
+
+  /* ---- book card ---- */
+  .book-card { margin-bottom: 24px; cursor: pointer; }
+  .book-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .book-title { font-size: 15px; color: #f5f5f5; }
+  .book-title .ebook-tag { font-size: 11px; color: #a3a3a3; margin-left: 6px; }
+  .dday { font-size: 12px; color: #a3a3a3; }
+  .dday.urgent {
+    font-size: 10px; color: #f87171; background: #3f1d1d;
+    padding: 2px 6px; border-radius: 3px; letter-spacing: 0.5px;
+  }
+
+  .sparkline { display: flex; gap: 2px; align-items: flex-end; height: 18px; margin-bottom: 2px; overflow: hidden; }
+  .spark-bar { width: 2px; flex-shrink: 0; background: #374151; border-radius: 1px 1px 0 0; }
+  .sparkline-placeholder { height: 18px; margin-bottom: 6px; font-size: 11px; color: #525252; display: flex; align-items: center; }
+  .spark-marker-row { display: flex; gap: 2px; margin-bottom: 6px; }
+  .spark-marker-cell { width: 2px; flex-shrink: 0; }
+  .spark-marker-dot { width: 2px; height: 3px; border-radius: 1px; }
+  .book-check { font-size: 12px; margin-left: 5px; }
+
+  .book-meta-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+  .book-meta-row .progress-label { font-size: 11px; color: #a3a3a3; }
+  .book-meta-row .today-alloc { font-size: 10px; color: #d4d4d4; letter-spacing: -0.2px; }
+  .book-meta-row .today-alloc .sep { color: #8a8a8a; margin: 0 2px; }
+
+  .progress-track { height: 3px; background: #262626; border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; }
+
+  /* ---- empty state ---- */
+  .empty-state { text-align: center; padding: 60px 20px; color: #6b7280; font-size: 13px; }
+
+  /* ---- fab ---- */
+  .fab {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    width: calc(100% - 32px); max-width: 448px;
+    text-align: center; padding: 12px; font-size: 13px; color: #d4d4d4;
+    background: #1a1a1a; border: 1px solid #262626; border-radius: 6px;
+  }
+
+  /* ---- modal ---- */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    z-index: 100; align-items: flex-end; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-sheet {
+    width: 100%; max-width: 480px; background: #0a0a0a;
+    border-radius: 12px 12px 0 0; padding: 20px 16px 28px;
+    border-top: 1px solid #262626;
+    max-height: 85vh; overflow-y: auto;
+  }
+  .modal-header {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
+    position: sticky; top: 0; background: #0a0a0a; z-index: 1; padding-top: 2px; margin-top: -2px;
+  }
+  .modal-title { font-size: 11px; color: #a3a3a3; letter-spacing: 1px; }
+  .modal-close { font-size: 16px; color: #a3a3a3; background: none; border: none; cursor: pointer; padding: 4px; }
+
+  .field { margin-bottom: 16px; }
+  .field-label { font-size: 11px; color: #a3a3a3; margin-bottom: 6px; }
+  .field input[type=text], .field input[type=number] {
+    width: 100%; background: transparent; border: 1px solid #333; border-radius: 4px;
+    padding: 8px 10px; font-size: 14px; color: #e5e5e5; font-family: inherit;
+  }
+  .field input::placeholder { color: #525252; }
+  .field input:focus { outline: none; border-color: #525252; }
+
+  .format-toggle { display: flex; gap: 8px; }
+  .format-opt {
+    flex: 1; text-align: center; padding: 8px; border-radius: 4px; font-size: 13px;
+    border: 1px solid #333; color: #6b7280; cursor: pointer;
+  }
+  .format-opt.selected { background: #262626; color: #f5f5f5; border-color: #525252; }
+
+  .deadline-row {
+    border: 1px solid #333; border-radius: 4px; padding: 8px 10px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .deadline-row input[type=date] {
+    background: transparent; border: none; color: #e5e5e5; font-family: inherit; font-size: 14px;
+  }
+  .deadline-row input[type=date]::-webkit-calendar-picker-indicator {
+    filter: invert(0.8); cursor: pointer;
+  }
+  .deadline-hint { font-size: 11px; color: #6b7280; }
+  .record-date-label { font-size: 11px; color: #a3a3a3; margin: 10px 0 6px; }
+
+  .submit-btn {
+    text-align: center; padding: 10px; font-size: 13px; color: #d4d4d4;
+    background: #1a1a1a; border: 1px solid #262626; border-radius: 4px; cursor: pointer; margin-top: 8px;
+  }
+  .submit-btn:active { background: #262626; }
+
+  .spark-hitarea { cursor: pointer; padding: 6px 0; margin: -6px 0; }
+
+  .detail-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #1a1a1a; font-size: 13px; }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-row .detail-date { color: #a3a3a3; }
+  .detail-row .detail-date.today { color: #f5f5f5; }
+  .detail-row .detail-value { color: #e5e5e5; }
+  .detail-row .detail-value.empty { color: #525252; }
+  .detail-empty { text-align: center; padding: 30px 0; color: #6b7280; font-size: 13px; }
+
+  .select-note { font-size: 11px; color: #525252; margin: -12px 0 16px; }
+  .select-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 0; border-bottom: 1px solid #1a1a1a; font-size: 13px; cursor: pointer; }
+  .select-row-left { display: flex; align-items: center; gap: 10px; }
+  .select-checkbox { width: 16px; height: 16px; border-radius: 4px; border: 1px solid #404040; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; color: #0a0a0a; }
+  .select-checkbox.checked { background: #4ade80; border-color: #4ade80; }
+  .select-book-name { color: #f5f5f5; }
+  .select-orig { color: #6b7280; font-size: 11px; }
+  .select-result-box { margin-top: 16px; padding: 14px; background: #111111; border: 1px solid #262626; border-radius: 8px; }
+  .select-result-title { font-size: 11px; color: #6b7280; margin: 0 0 10px; }
+  .select-result-empty { font-size: 12px; color: #6b7280; margin: 0; text-align: center; }
+  .select-result-row { display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; }
+  .select-result-row .select-result-name { color: #a3a3a3; }
+  .select-result-row .select-result-val { color: #f5f5f5; }
+  .select-result-total { border-top: 1px solid #262626; margin-top: 6px; padding-top: 10px; font-size: 12px; color: #6b7280; }
+
+  .book-actions { display: flex; gap: 8px; margin-top: 20px; }
+  .action-btn {
+    flex: 1; text-align: center; padding: 9px; font-size: 12px; color: #a3a3a3;
+    border: 1px solid #333; border-radius: 4px; cursor: pointer;
+  }
+  .action-btn.danger { color: #f87171; border-color: #3f1d1d; }
+
+  /* ---- 헤더 상단 (보관함 링크) ---- */
+  .header-top-row { display: flex; justify-content: space-between; align-items: flex-start; }
+  .archive-link {
+    font-size: 11px; color: #a3a3a3; border: 1px solid #333; border-radius: 4px;
+    padding: 5px 8px; margin-top: 4px; cursor: pointer; white-space: nowrap;
+  }
+
+  /* ---- 보관함 화면 ---- */
+  .archive-tabs { display: flex; border-bottom: 1px solid #262626; margin-bottom: 20px; }
+  .archive-tab {
+    flex: 1; text-align: center; padding: 8px; font-size: 13px; color: #6b7280;
+    cursor: pointer; border-bottom: 2px solid transparent;
+  }
+  .archive-tab.selected { color: #f5f5f5; border-bottom-color: #f5f5f5; }
+  .archive-item { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #1a1a1a; }
+  .archive-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .archive-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; gap: 8px; }
+  .archive-title { font-size: 14px; color: #f5f5f5; }
+  .archive-date { font-size: 11px; color: #6b7280; white-space: nowrap; }
+  .archive-meta { font-size: 11px; color: #6b7280; margin-bottom: 10px; }
+  .archive-actions { display: flex; gap: 8px; }
+  .archive-btn { flex: 1; text-align: center; padding: 7px; font-size: 12px; border-radius: 4px; cursor: pointer; }
+  .archive-btn.restore { color: #a3a3a3; border: 1px solid #333; }
+  .archive-btn.perm-delete { color: #f87171; border: 1px solid #3f1d1d; }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="header-top-row">
+    <div class="goal-label">TODAY_GOAL</div>
+    <div style="display:flex; gap:10px;">
+      <div class="archive-link" id="select-link">[ 오늘 선택 ]</div>
+      <div class="archive-link" id="archive-link">[ 보관함 ]</div>
+    </div>
+  </div>
+  <div class="goal-number" id="goal-number">0<span>p</span></div>
+  <div class="goal-sub" id="goal-sub">-</div>
+  <div class="goal-progress" id="goal-progress"></div>
+  <div class="sync-status" id="sync-status"></div>
+
+  <div class="divider"></div>
+
+  <div id="book-list"></div>
+</div>
+
+<div class="fab" id="fab-add">[ + 책 추가 ]</div>
+
+<!-- 책 추가/수정 모달 -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-sheet">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title-text">NEW_BOOK</span>
+      <button class="modal-close" id="modal-close">✕</button>
+    </div>
+
+    <div class="field">
+      <div class="field-label">제목</div>
+      <input type="text" id="input-title" placeholder="책 제목 입력" autocomplete="off">
+    </div>
+
+    <div class="field">
+      <div class="field-label">총 쪽수</div>
+      <input type="number" id="input-total" placeholder="0" inputmode="numeric">
+    </div>
+
+    <div class="field">
+      <div class="field-label">형태</div>
+      <div class="format-toggle">
+        <div class="format-opt selected" data-format="paper">종이책</div>
+        <div class="format-opt" data-format="ebook">전자책</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">시작일</div>
+      <div class="deadline-row">
+        <input type="date" id="input-startdate">
+        <span class="deadline-hint" id="startdate-hint"></span>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">마감일</div>
+      <div class="deadline-row">
+        <input type="date" id="input-deadline">
+        <span class="deadline-hint" id="deadline-hint"></span>
+      </div>
+    </div>
+
+    <div class="field" id="current-page-field" style="display:none;">
+      <div class="field-label" id="current-page-label">현재 페이지</div>
+      <input type="number" id="input-current" placeholder="0" inputmode="numeric">
+      <div class="record-date-label">기록 날짜</div>
+      <div class="deadline-row">
+        <input type="date" id="input-record-date">
+        <span class="deadline-hint" id="record-date-hint"></span>
+      </div>
+    </div>
+
+    <div class="submit-btn" id="submit-btn">추가하기</div>
+
+    <div class="book-actions" id="edit-actions" style="display:none;">
+      <div class="action-btn" id="btn-complete">완독 처리</div>
+      <div class="action-btn danger" id="btn-delete">삭제</div>
+    </div>
+  </div>
+</div>
+
+<!-- 보관함(완독/삭제됨) -->
+<div class="modal-overlay" id="archive-overlay">
+  <div class="modal-sheet">
+    <div class="modal-header">
+      <span class="modal-title">ARCHIVE</span>
+      <button class="modal-close" id="archive-close">✕</button>
+    </div>
+    <div class="archive-tabs">
+      <div class="archive-tab selected" data-tab="completed">완독 (<span id="completed-count">0</span>)</div>
+      <div class="archive-tab" data-tab="deleted">삭제됨 (<span id="deleted-count">0</span>)</div>
+    </div>
+    <div id="archive-list"></div>
+  </div>
+</div>
+
+<!-- 책별 일일 기록 상세 -->
+<div class="modal-overlay" id="detail-overlay">
+  <div class="modal-sheet">
+    <div class="modal-header">
+      <span class="modal-title" id="detail-title-text">기록</span>
+      <button class="modal-close" id="detail-close">✕</button>
+    </div>
+    <div id="detail-list"></div>
+  </div>
+</div>
+
+<!-- 오늘 읽을 책 선택 계산기 (저장 안 함, 그 자리에서만 계산) -->
+<div class="modal-overlay" id="select-overlay">
+  <div class="modal-sheet">
+    <div class="modal-header">
+      <span class="modal-title">오늘 읽을 책 고르기</span>
+      <button class="modal-close" id="select-close">✕</button>
+    </div>
+    <p class="select-note">저장되지 않아요 — 체크할 때마다 그 자리에서만 계산돼요</p>
+    <div id="select-list"></div>
+    <div id="select-result"></div>
+  </div>
+</div>
+
+<script>
+// ==================== FIREBASE REST API ====================
+(function() {
+  var API_KEY = 'AIzaSyBQF2t6hzHod0aTIwm9BM-Muh-K5mqgAFU';
+  var PROJECT = 'booklog-490911';
+  var REST_URL = 'https://firestore.googleapis.com/v1/projects/' + PROJECT + '/databases/(default)/documents/booktracker/data';
+
+  var _pendingSave = null;
+  var _saveInProgress = false;
+  var _retryTimer = null;
+
+  function _setStatus(text) {
+    var el = document.getElementById('sync-status');
+    if (el) el.textContent = text;
+  }
+
+  function _doSave(data) {
+    if (_saveInProgress) return;
+    _saveInProgress = true;
+    _setStatus('저장 중...');
+    var body = JSON.stringify({ fields: { payload: { stringValue: JSON.stringify(data) } } });
+    fetch(REST_URL + '?key=' + API_KEY, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: body
+    })
+    .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function() {
+      _saveInProgress = false;
+      _pendingSave = null;
+      if (_retryTimer) { clearTimeout(_retryTimer); _retryTimer = null; }
+      _setStatus('동기화됨');
+    })
+    .catch(function(e) {
+      _saveInProgress = false;
+      _setStatus('미저장 - 재시도 중');
+      console.error('[Booktracker] 저장 실패:', e.message);
+      if (_retryTimer) clearTimeout(_retryTimer);
+      _retryTimer = setTimeout(function() {
+        if (_pendingSave) { var d = _pendingSave; _pendingSave = null; _doSave(d); }
+      }, 5000);
+    });
+  }
+
+  function _doSaveKeepalive(data) {
+    var body = JSON.stringify({ fields: { payload: { stringValue: JSON.stringify(data) } } });
+    try {
+      fetch(REST_URL + '?key=' + API_KEY, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: body, keepalive: true
+      }).catch(function() {});
+    } catch(e) {}
+  }
+
+  window.firebaseSave = function(data) {
+    _pendingSave = data;
+    if (!_saveInProgress) _doSave(data);
+  };
+
+  window.firebaseLoad = function(callback) {
+    fetch(REST_URL + '?key=' + API_KEY)
+    .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function(d) {
+      try { callback(JSON.parse(d.fields.payload.stringValue)); }
+      catch(e) { callback(null); }
+    })
+    .catch(function() { callback(null); });
+  };
+
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'hidden' && window._lastSavedDb) _doSaveKeepalive(window._lastSavedDb);
+  });
+  window.addEventListener('pagehide', function() {
+    if (window._lastSavedDb) _doSaveKeepalive(window._lastSavedDb);
+  });
+  window.addEventListener('beforeunload', function() {
+    if (window._lastSavedDb) _doSaveKeepalive(window._lastSavedDb);
+  });
+
+  _setStatus('연결 중...');
+  fetch(REST_URL + '?key=' + API_KEY)
+  .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+  .then(function(d) {
+    var cloudData = JSON.parse(d.fields.payload.stringValue);
+    var localRaw = localStorage.getItem('booktracker_data');
+    if (localRaw) {
+      try {
+        var localData = JSON.parse(localRaw);
+        var cloudTs = cloudData._savedAt || '';
+        var localTs = localData._savedAt || '';
+        if (localTs > cloudTs) {
+          window._cloudData = localData;
+          window._needsUpload = true;
+        } else {
+          window._cloudData = cloudData;
+        }
+      } catch(e) { window._cloudData = cloudData; }
+    } else {
+      window._cloudData = cloudData;
+    }
+    _setStatus('연결됨');
+  })
+  .catch(function(e) {
+    console.error('[Booktracker] Firebase 로드 실패:', e.message);
+    _setStatus('연결 실패');
+  })
+  .finally(function() {
+    window._firebaseReady = true;
+    if (window._waitingForFirebase) window._waitingForFirebase();
+  });
+})();
+</script>
+
+<script>
+// ==================== DATA STORE ====================
+// book: { id, title, totalPages, currentPage(항상 페이지 단위), format:'paper'|'ebook',
+//         deadline:'YYYY-MM-DD', startDate:'YYYY-MM-DD', color:'#hex',
+//         status: 'active'|'completed'|'deleted',
+//         completedDate:'YYYY-MM-DD', deletedDate:'YYYY-MM-DD', preCompletePage:number(완독 취소용 복원값),
+//         history: { 'YYYY-MM-DD': 그날 읽은 페이지 증가량(delta) } }
+// 오늘 목표는 db.dailyGoal 같은 별도 저장 없이, 매번 그 자리에서 계산함 (아래 CALC 섹션 참고).
+//   - 기준선 = currentPage - history[오늘날짜] (오늘 읽은 분량은 제외) 로 계산하므로,
+//     오늘 읽어도 목표가 안 줄고, 과거 날짜 기록을 나중에 추가해도 다음 렌더링에서 바로 반영됨.
+let db = { books: [] };
+let editingId = null;
+
+const COLOR_PALETTE = ['#60a5fa','#f472b6','#facc15','#4ade80','#a78bfa','#22d3ee','#fb923c','#c084fc','#2dd4bf','#f87171'];
+
+function save() {
+  db._savedAt = new Date().toISOString();
+  localStorage.setItem('booktracker_data', JSON.stringify(db));
+  window._lastSavedDb = db;
+  if (window.firebaseSave) window.firebaseSave(db);
+}
+
+function load() {
+  const cloudData = window._cloudData;
+  if (cloudData) {
+    db = cloudData;
+    window._cloudData = null;
+    localStorage.setItem('booktracker_data', JSON.stringify(db));
+    if (window._needsUpload) {
+      window._needsUpload = false;
+      if (window.firebaseSave) window.firebaseSave(db);
+    }
+  } else {
+    const raw = localStorage.getItem('booktracker_data');
+    if (raw) { try { db = JSON.parse(raw); } catch(e) {} }
+  }
+  if (!db.books) db.books = [];
+  db.books.forEach(b => {
+    if (!b.status) b.status = b.archived ? 'completed' : 'active'; // 이전 데이터 호환
+  });
+  renderAll();
+}
+
+// ==================== DATE HELPERS (KST) ====================
+// Intl로 서울 시간대 기준 오늘 날짜를 직접 계산 (브라우저 시간대 설정과 무관하게 항상 정확)
+const _kstFormatter = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit'
+});
+function todayStr() {
+  return _kstFormatter.format(new Date());
+}
+function toDate(str) { return new Date(str + 'T00:00:00+09:00'); }
+function daysBetween(a, b) { return Math.round((toDate(b) - toDate(a)) / 86400000); }
+// KST 기준으로 정확한 날짜 문자열을 뽑기 위한 헬퍼 (toISOString은 UTC라 하루 밀리는 버그가 있었음)
+function dateStrAtKST(epochMs) { return _kstFormatter.format(new Date(epochMs)); }
+function endOfMonthStr() {
+  const d = toDate(todayStr());
+  const last = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+  const y = last.getFullYear(), m = String(last.getMonth()+1).padStart(2,'0'), dd = String(last.getDate()).padStart(2,'0');
+  return `${y}-${m}-${dd}`;
+}
+
+// ==================== CALC ====================
+function daysLeft(book) {
+  const diff = daysBetween(todayStr(), book.deadline);
+  return Math.max(1, diff + 1); // 오늘 포함
+}
+function remainingPages(book) { return Math.max(0, book.totalPages - book.currentPage); }
+// 오늘 읽은 분량을 제외한 기준선. 이걸로 계산하면 오늘 읽어도 오늘 목표가 안 줄어듦.
+function goalBaselinePage(book) {
+  const t = todayStr();
+  const todayDelta = (book.history && book.history[t]) || 0;
+  return book.currentPage - todayDelta;
+}
+function todayGoalAlloc(book) {
+  const base = goalBaselinePage(book);
+  const r = Math.max(0, book.totalPages - base);
+  if (r <= 0) return 0;
+  return Math.ceil(r / daysLeft(book));
+}
+function progressPct(book) {
+  if (book.totalPages <= 0) return 0;
+  return Math.min(100, Math.round((book.currentPage / book.totalPages) * 100));
+}
+function pageToPercent(book, page) {
+  if (book.totalPages <= 0) return 0;
+  return Math.round((page / book.totalPages) * 100);
+}
+function percentToPage(book, pct) {
+  return Math.round((pct / 100) * book.totalPages);
+}
+
+function activeBooks() { return db.books.filter(b => b.status === 'active').sort((a,b) => a.deadline < b.deadline ? -1 : a.deadline > b.deadline ? 1 : 0); }
+
+// 오늘 이 책을 allocPages만큼 읽으면 도달하는 지점까지 포함해서 "오늘 Np · Mp까지" 형태로 포맷
+function formatAllocDest(book, allocPages) {
+  const destPage = Math.min(book.totalPages, goalBaselinePage(book) + allocPages);
+  if (book.format === 'ebook') {
+    return `${pageToPercent(book, allocPages)}%<span class="sep">·</span>${pageToPercent(book, destPage)}%까지`;
+  }
+  return `${allocPages}p<span class="sep">·</span>${destPage}p까지`;
+}
+
+function goalTotal() {
+  return activeBooks().reduce((sum, b) => sum + todayGoalAlloc(b), 0);
+}
+function getBookAlloc(book) {
+  return todayGoalAlloc(book);
+}
+function achievedToday() {
+  const t = todayStr();
+  let sum = 0;
+  db.books.forEach(b => { if (b.history && b.history[t]) sum += b.history[t]; });
+  return Math.max(0, sum);
+}
+
+function assignColor() {
+  const used = db.books.filter(b => b.status === 'active').map(b => b.color);
+  const avail = COLOR_PALETTE.filter(c => !used.includes(c));
+  const pool = avail.length > 0 ? avail : COLOR_PALETTE;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+// ==================== SPARKLINE ====================
+function renderSparkline(book) {
+  if (!book.startDate) {
+    return `<div class="sparkline-placeholder">시작 전</div>`;
+  }
+  const start = book.startDate;
+  const end = book.deadline;
+  const totalDays = Math.max(1, daysBetween(start, end) + 1);
+  const hist = book.history || {};
+  const maxDelta = Math.max(1, ...Object.values(hist).map(v => Math.max(0, v)));
+  const todayIndex = daysBetween(start, todayStr());
+
+  let bars = '';
+  let markers = '';
+  for (let i = 0; i < totalDays; i++) {
+    const dstr = dateStrAtKST(toDate(start).getTime() + i * 86400000);
+    const delta = Math.max(0, hist[dstr] || 0);
+    const h = delta > 0 ? Math.max(15, Math.round((delta / maxDelta) * 100)) : 0;
+    const bg = delta > 0 ? book.color : '#374151';
+    bars += `<div class="spark-bar" style="height:${h}%; background:${bg};"></div>`;
+
+    if (i === todayIndex) {
+      const markerColor = delta > 0 ? book.color : '#525252';
+      markers += `<div class="spark-marker-cell"><div class="spark-marker-dot" style="background:${markerColor};"></div></div>`;
+    } else {
+      markers += `<div class="spark-marker-cell"></div>`;
+    }
+  }
+
+  const markerRow = (todayIndex >= 0 && todayIndex < totalDays) ? `<div class="spark-marker-row">${markers}</div>` : '';
+  return `<div class="sparkline">${bars}</div>${markerRow}`;
+}
+
+// ==================== RENDER ====================
+function renderAll() {
+  const books = activeBooks();
+  const totalGoal = goalTotal();
+  const achieved = achievedToday();
+  const rate = totalGoal > 0 ? Math.round((achieved / totalGoal) * 100) : 0;
+
+  document.getElementById('goal-number').innerHTML = `${totalGoal}<span>p</span>`;
+  const dateLabel = toDate(todayStr()).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' });
+  document.getElementById('goal-sub').textContent = `${dateLabel} · ${books.length}권`;
+  document.getElementById('goal-progress').textContent = `${achieved}p 읽음 · 달성률 ${rate}% · 남은 ${Math.max(0, totalGoal - achieved)}p`;
+
+  const listEl = document.getElementById('book-list');
+  if (books.length === 0) {
+    listEl.innerHTML = `<div class="empty-state">등록된 책이 없어요.<br>아래 버튼으로 책을 추가해보세요.</div>`;
+    return;
+  }
+
+  listEl.innerHTML = books.map(book => {
+    const dl = daysLeft(book);
+    const urgent = dl <= 3;
+    const ddayLabel = dl <= 0 ? 'D-day' : `D-${dl - 1}`;
+    const ddayHtml = urgent
+      ? `<span class="dday urgent">${ddayLabel}</span>`
+      : `<span class="dday">${ddayLabel}</span>`;
+
+    const isEbook = book.format === 'ebook';
+    const alloc = getBookAlloc(book);
+    const remaining = remainingPages(book);
+    const pct = progressPct(book);
+    const readToday = !!(book.history && book.history[todayStr()] > 0);
+    const checkHtml = readToday ? `<span class="book-check" style="color:${book.color};">✓</span>` : '';
+
+    let progressLabel, allocLabel;
+    const remainLabel = isEbook ? `${100 - pct}%` : `${remaining}p`;
+    if (isEbook) {
+      progressLabel = `${pct}%`;
+    } else {
+      progressLabel = `${book.currentPage}/${book.totalPages} (${pct}%)`;
+    }
+    allocLabel = `오늘 ${formatAllocDest(book, alloc)}<span class="sep">·</span>남은 ${remainLabel}`;
+
+    return `
+      <div class="book-card" data-id="${book.id}">
+        <div class="book-top">
+          <span class="book-title">${escapeHtml(book.title)}${checkHtml}${isEbook ? '<span class="ebook-tag">전자책</span>' : ''}</span>
+          ${ddayHtml}
+        </div>
+        <div class="spark-hitarea" data-id="${book.id}">${renderSparkline(book)}</div>
+        <div class="book-meta-row">
+          <span class="progress-label">${progressLabel}</span>
+          <span class="today-alloc">${allocLabel}</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" style="width:${pct}%; background:${book.color};"></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  listEl.querySelectorAll('.book-card').forEach(card => {
+    card.addEventListener('click', () => openModal(card.dataset.id));
+  });
+
+  listEl.querySelectorAll('.spark-hitarea').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openDetailSheet(el.dataset.id);
+    });
+  });
+}
+
+function escapeHtml(s) {
+  const div = document.createElement('div');
+  div.textContent = s;
+  return div.innerHTML;
+}
+
+// ==================== MODAL ====================
+const overlay = document.getElementById('modal-overlay');
+let selectedFormat = 'paper';
+
+function openModal(id) {
+  editingId = id || null;
+  const book = id ? db.books.find(b => b.id === id) : null;
+
+  document.getElementById('modal-title-text').textContent = book ? 'EDIT_BOOK' : 'NEW_BOOK';
+  document.getElementById('input-title').value = book ? book.title : '';
+  document.getElementById('input-total').value = book ? book.totalPages : '';
+  document.getElementById('input-startdate').value = book ? (book.startDate || '') : '';
+  document.getElementById('input-deadline').value = book ? book.deadline : endOfMonthStr();
+  updateStartdateHint();
+  updateDeadlineHint();
+
+  selectedFormat = book ? book.format : 'paper';
+  updateFormatUI();
+
+  const cpField = document.getElementById('current-page-field');
+  const cpInput = document.getElementById('input-current');
+  const recordDateInput = document.getElementById('input-record-date');
+  if (book) {
+    cpField.style.display = 'block';
+    document.getElementById('current-page-label').textContent = book.format === 'ebook' ? '현재 진행률(%)' : '현재 페이지';
+    cpInput.value = book.format === 'ebook' ? pageToPercent(book, book.currentPage) : book.currentPage;
+    recordDateInput.value = todayStr();
+    updateRecordDateHint();
+  } else {
+    cpField.style.display = 'none';
+  }
+
+  document.getElementById('submit-btn').textContent = book ? '저장하기' : '추가하기';
+  document.getElementById('edit-actions').style.display = book ? 'flex' : 'none';
+
+  overlay.classList.add('open');
+}
+
+function closeModal() { overlay.classList.remove('open'); editingId = null; }
+
+function updateFormatUI() {
+  document.querySelectorAll('.format-opt').forEach(el => {
+    el.classList.toggle('selected', el.dataset.format === selectedFormat);
+  });
+  const cpLabel = document.getElementById('current-page-label');
+  if (cpLabel) cpLabel.textContent = selectedFormat === 'ebook' ? '현재 진행률(%)' : '현재 페이지';
+}
+
+function updateDeadlineHint() {
+  const val = document.getElementById('input-deadline').value;
+  document.getElementById('deadline-hint').textContent = val === endOfMonthStr() ? '이번 달 말일' : '';
+}
+function updateStartdateHint() {
+  const val = document.getElementById('input-startdate').value;
+  document.getElementById('startdate-hint').textContent = val === todayStr() ? '오늘' : '';
+}
+function updateRecordDateHint() {
+  const val = document.getElementById('input-record-date').value;
+  document.getElementById('record-date-hint').textContent = val === todayStr() ? '오늘' : '';
+}
+
+document.querySelectorAll('.format-opt').forEach(el => {
+  el.addEventListener('click', () => { selectedFormat = el.dataset.format; updateFormatUI(); });
+});
+document.getElementById('input-startdate').addEventListener('change', updateStartdateHint);
+document.getElementById('input-deadline').addEventListener('change', updateDeadlineHint);
+document.getElementById('input-record-date').addEventListener('change', updateRecordDateHint);
+document.getElementById('modal-close').addEventListener('click', closeModal);
+document.getElementById('fab-add').addEventListener('click', () => openModal(null));
+overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+
+document.getElementById('submit-btn').addEventListener('click', () => {
+  const title = document.getElementById('input-title').value.trim();
+  const totalPages = parseInt(document.getElementById('input-total').value, 10);
+  const startDate = document.getElementById('input-startdate').value;
+  const deadline = document.getElementById('input-deadline').value;
+
+  if (!title || !totalPages || totalPages <= 0 || !deadline) {
+    alert('제목, 총 쪽수, 마감일을 입력해주세요.');
+    return;
+  }
+
+  if (editingId) {
+    const book = db.books.find(b => b.id === editingId);
+
+    book.title = title;
+    book.totalPages = totalPages;
+    book.startDate = startDate || null;
+    book.deadline = deadline;
+    book.format = selectedFormat;
+
+    const cpVal = parseInt(document.getElementById('input-current').value, 10) || 0;
+    const newCP = selectedFormat === 'ebook' ? percentToPage(book, cpVal) : cpVal;
+    const recordDate = document.getElementById('input-record-date').value || todayStr();
+    const delta = newCP - book.currentPage;
+    if (!book.history) book.history = {};
+    if (delta !== 0) {
+      book.history[recordDate] = (book.history[recordDate] || 0) + delta;
+    }
+    book.currentPage = newCP;
+  } else {
+    const book = {
+      id: 'b' + Date.now(),
+      title, totalPages,
+      currentPage: 0,
+      format: selectedFormat,
+      startDate: startDate || null, deadline,
+      color: assignColor(),
+      status: 'active',
+      history: {}
+    };
+    db.books.push(book);
+  }
+
+  save();
+  renderAll();
+  closeModal();
+});
+
+document.getElementById('btn-complete').addEventListener('click', () => {
+  const book = db.books.find(b => b.id === editingId);
+  if (book && confirm('완독 처리할까요? 보관함(완독)으로 이동하고, 오늘 목표는 그대로 유지됩니다.')) {
+    book.preCompletePage = book.currentPage; // 복원용 스냅샷
+    book.currentPage = book.totalPages;
+    book.status = 'completed';
+    book.completedDate = todayStr();
+    save();
+    renderAll();
+    closeModal();
+  }
+});
+
+document.getElementById('btn-delete').addEventListener('click', () => {
+  const book = db.books.find(b => b.id === editingId);
+  if (book && confirm('이 책을 삭제할까요? 보관함(삭제됨)으로 이동하며, 오늘 목표에서 이 책의 할당량만큼 즉시 빠집니다.')) {
+    book.status = 'deleted';
+    book.deletedDate = todayStr();
+    save();
+    renderAll();
+    closeModal();
+  }
+});
+
+// ==================== ARCHIVE ====================
+let archiveTab = 'completed';
+const archiveOverlay = document.getElementById('archive-overlay');
+
+document.getElementById('archive-link').addEventListener('click', () => {
+  archiveTab = 'completed';
+  document.querySelectorAll('.archive-tab').forEach(t => t.classList.toggle('selected', t.dataset.tab === 'completed'));
+  renderArchive();
+  archiveOverlay.classList.add('open');
+});
+document.getElementById('archive-close').addEventListener('click', () => archiveOverlay.classList.remove('open'));
+archiveOverlay.addEventListener('click', (e) => { if (e.target === archiveOverlay) archiveOverlay.classList.remove('open'); });
+
+document.querySelectorAll('.archive-tab').forEach(el => {
+  el.addEventListener('click', () => {
+    archiveTab = el.dataset.tab;
+    document.querySelectorAll('.archive-tab').forEach(t => t.classList.toggle('selected', t.dataset.tab === archiveTab));
+    renderArchive();
+  });
+});
+
+function renderArchive() {
+  const completed = db.books.filter(b => b.status === 'completed');
+  const deleted = db.books.filter(b => b.status === 'deleted');
+  document.getElementById('completed-count').textContent = completed.length;
+  document.getElementById('deleted-count').textContent = deleted.length;
+
+  const list = archiveTab === 'completed' ? completed : deleted;
+  const listEl = document.getElementById('archive-list');
+
+  if (list.length === 0) {
+    listEl.innerHTML = `<div class="empty-state">${archiveTab === 'completed' ? '완독한 책이 없어요.' : '삭제된 책이 없어요.'}</div>`;
+    return;
+  }
+
+  listEl.innerHTML = list.map(book => {
+    let dateLabel, metaLine;
+    if (archiveTab === 'completed') {
+      dateLabel = (book.completedDate || '-').replace(/-/g, '.') + ' 완독';
+      const days = (book.startDate && book.completedDate) ? (daysBetween(book.startDate, book.completedDate) + 1) : null;
+      metaLine = `${book.totalPages}p${days ? ` · ${days}일간 읽음` : ''}`;
+    } else {
+      dateLabel = (book.deletedDate || '-').replace(/-/g, '.') + ' 삭제';
+      metaLine = book.format === 'ebook'
+        ? `전자책 · ${pageToPercent(book, book.currentPage)}%까지 읽음`
+        : `${book.currentPage}/${book.totalPages}p까지 읽음`;
+    }
+    return `
+      <div class="archive-item">
+        <div class="archive-top">
+          <span class="archive-title">${escapeHtml(book.title)}</span>
+          <span class="archive-date">${dateLabel}</span>
+        </div>
+        <div class="archive-meta">${metaLine}</div>
+        <div class="archive-actions">
+          <div class="archive-btn restore" data-action="restore" data-id="${book.id}">복원</div>
+          <div class="archive-btn perm-delete" data-action="perm-delete" data-id="${book.id}">완전 삭제</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  listEl.querySelectorAll('[data-action="restore"]').forEach(el => {
+    el.addEventListener('click', () => restoreBook(el.dataset.id));
+  });
+  listEl.querySelectorAll('[data-action="perm-delete"]').forEach(el => {
+    el.addEventListener('click', () => permanentlyDeleteBook(el.dataset.id));
+  });
+}
+
+// ==================== DETAIL SHEET (일일 기록) ====================
+const detailOverlay = document.getElementById('detail-overlay');
+
+function openDetailSheet(id) {
+  const book = db.books.find(b => b.id === id);
+  if (!book) return;
+  document.getElementById('detail-title-text').textContent = `${book.title} · 기록`;
+  document.getElementById('detail-list').innerHTML = renderDetailList(book);
+  detailOverlay.classList.add('open');
+}
+
+function renderDetailList(book) {
+  if (!book.startDate) {
+    return `<div class="detail-empty">시작 전이에요.</div>`;
+  }
+  const start = book.startDate;
+  const today = todayStr();
+  const lastDay = daysBetween(start, today) < 0 ? start : today;
+  const totalDays = daysBetween(start, lastDay) + 1;
+  const hist = book.history || {};
+
+  let rows = '';
+  for (let i = totalDays - 1; i >= 0; i--) {
+    const dstr = dateStrAtKST(toDate(start).getTime() + i * 86400000);
+    const isToday = dstr === today;
+    const isStart = dstr === start;
+    const delta = hist[dstr] || 0;
+    const dateLabel = dstr.slice(5) + (isToday ? ' (오늘)' : isStart ? ' (시작일)' : '');
+    const valueHtml = delta > 0
+      ? `<span class="detail-value">${delta}쪽</span>`
+      : `<span class="detail-value empty">기록 없음</span>`;
+    rows += `<div class="detail-row"><span class="detail-date${isToday ? ' today' : ''}">${dateLabel}</span>${valueHtml}</div>`;
+  }
+  return rows || `<div class="detail-empty">아직 기록이 없어요.</div>`;
+}
+
+document.getElementById('detail-close').addEventListener('click', () => detailOverlay.classList.remove('open'));
+detailOverlay.addEventListener('click', (e) => { if (e.target === detailOverlay) detailOverlay.classList.remove('open'); });
+
+// ==================== 오늘 읽을 책 선택 계산기 (저장 안 함) ====================
+const selectOverlay = document.getElementById('select-overlay');
+let selectedBookIds = new Set();
+
+document.getElementById('select-link').addEventListener('click', () => {
+  selectedBookIds = new Set(activeBooks().map(b => b.id)); // 기본값: 전체 선택 (원래 목표와 동일한 상태로 시작)
+  selectResultHeightPx = null; // 열 때마다 전체 선택 상태 기준으로 높이 다시 측정
+  selectOverlay.classList.add('open'); // scrollHeight가 display:none 상태에서 0으로 측정되는 것을 막기 위해 먼저 open
+  renderSelectSheet();
+});
+document.getElementById('select-close').addEventListener('click', () => selectOverlay.classList.remove('open'));
+selectOverlay.addEventListener('click', (e) => { if (e.target === selectOverlay) selectOverlay.classList.remove('open'); });
+
+function renderSelectSheet() {
+  const books = activeBooks();
+  document.getElementById('select-list').innerHTML = books.map(b => {
+    const checked = selectedBookIds.has(b.id);
+    return `
+      <div class="select-row" data-id="${b.id}">
+        <div class="select-row-left">
+          <div class="select-checkbox${checked ? ' checked' : ''}">${checked ? '✓' : ''}</div>
+          <span class="select-book-name">${escapeHtml(b.title)}</span>
+        </div>
+        <span class="select-orig">원래 ${formatAllocDest(b, getBookAlloc(b))}</span>
+      </div>`;
+  }).join('');
+
+  document.querySelectorAll('#select-list .select-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const id = row.dataset.id;
+      if (selectedBookIds.has(id)) selectedBookIds.delete(id); else selectedBookIds.add(id);
+      renderSelectSheet();
+    });
+  });
+
+  renderSelectResult(books);
+}
+
+// 체크 개수와 무관하게 결과 상자 높이가 안 흔들리도록, "전체 선택" 상태(가장 큰 상태)에서 실제 렌더링된
+// 높이를 한 번 측정해서 고정값으로 저장하고, 그 이후 모든 렌더링에 그 값을 그대로 적용함.
+// (이전엔 줄 수 기반으로 높이를 추정만 해서, 실제 렌더링 높이와 몇 px씩 어긋나 특정 지점에서 살짝 줄어드는 문제가 있었음)
+let selectResultHeightPx = null;
+
+function renderSelectResult(books) {
+  const resultEl = document.getElementById('select-result');
+  const target = books.reduce((sum, b) => sum + getBookAlloc(b), 0);
+  const selected = books.filter(b => selectedBookIds.has(b.id)); // activeBooks() 정렬 순서(마감 임박순) 유지됨
+
+  let innerHtml;
+  if (selected.length === 0) {
+    innerHtml = `<p class="select-result-empty">책을 선택해주세요.</p>`;
+  } else {
+    const allocs = computeCappedRedistribution(selected, target);
+    const achieved = allocs.reduce((a, v) => a + v, 0);
+    const rows = selected.map((b, i) =>
+      `<div class="select-result-row"><span class="select-result-name">${escapeHtml(b.title)}</span><span class="select-result-val">${formatAllocDest(b, allocs[i])}</span></div>`
+    ).join('');
+    const totalLine = achieved >= target
+      ? `합계 ${achieved}p (원래 목표와 동일)`
+      : `합계 ${achieved}p (목표 ${target}p 중 ${achieved}p만 배정 가능 — 선택한 책들 남은 분량이 부족해요)`;
+    innerHtml = `<p class="select-result-title">오늘 이 책들만 읽으면</p>${rows}<div class="select-result-total">${totalLine}</div>`;
+  }
+
+  resultEl.innerHTML = `<div class="select-result-box" id="select-result-box">${innerHtml}</div>`;
+
+  const box = document.getElementById('select-result-box');
+  if (selectResultHeightPx === null) {
+    selectResultHeightPx = box.scrollHeight; // 이 시점(항상 전체 선택 상태로 열림)이 가장 큰 높이
+  }
+  box.style.height = selectResultHeightPx + 'px';
+  box.style.overflow = 'hidden';
+}
+
+// 선택된 책들에 target 페이지를 원래 할당량 비율대로 나누되, 각 책은 실제 남은 쪽수(remainingPages)를 넘겨 받을 수 없음.
+// 한 책이 상한에 걸리면 그만큼을 나머지 책들에 다시 비율대로 나눠주는 방식(water-filling)으로 반복 계산.
+function computeCappedRedistribution(selectedBooks, target) {
+  const n = selectedBooks.length;
+  const origs = selectedBooks.map(b => getBookAlloc(b));
+  const caps = selectedBooks.map(b => remainingPages(b));
+  const allocs = new Array(n).fill(0);
+  const capped = new Array(n).fill(false);
+  let remaining = target;
+
+  for (let iter = 0; iter < n + 1; iter++) {
+    const activeIdx = [];
+    let origSum = 0;
+    for (let i = 0; i < n; i++) {
+      if (!capped[i]) { activeIdx.push(i); origSum += origs[i]; }
+    }
+    if (activeIdx.length === 0 || remaining <= 0 || origSum <= 0) break;
+
+    let newlyCapped = false;
+    for (const i of activeIdx) {
+      const share = remaining * (origs[i] / origSum);
+      const room = caps[i] - allocs[i];
+      if (share >= room) {
+        allocs[i] += room;
+        remaining -= room;
+        capped[i] = true;
+        newlyCapped = true;
+      }
+    }
+    if (!newlyCapped) {
+      for (const i of activeIdx) {
+        allocs[i] += remaining * (origs[i] / origSum);
+      }
+      remaining = 0;
+      break;
+    }
+  }
+
+  // 버림 처리 후, 남는 오차는 아직 여유(cap 안 찬) 있는 책들 중 마감 임박한 순서대로 채움
+  const floored = allocs.map((v, i) => Math.min(caps[i], Math.floor(v)));
+  const achievable = Math.min(target, caps.reduce((a, v) => a + v, 0));
+  let leftover = achievable - floored.reduce((a, v) => a + v, 0);
+  for (let i = 0; i < n && leftover > 0; i++) {
+    const room = caps[i] - floored[i];
+    const give = Math.min(room, leftover);
+    floored[i] += give;
+    leftover -= give;
+  }
+  return floored;
+}
+
+function restoreBook(id) {
+  const book = db.books.find(b => b.id === id);
+  if (!book) return;
+  if (book.status === 'completed' && book.preCompletePage != null) {
+    book.currentPage = book.preCompletePage;
+  }
+  book.status = 'active';
+  save();
+  renderAll();
+  renderArchive();
+}
+
+function permanentlyDeleteBook(id) {
+  if (!confirm('완전히 삭제할까요? 이후에는 복원할 수 없습니다.')) return;
+  db.books = db.books.filter(b => b.id !== id);
+  save();
+  renderArchive();
+}
+
+// ==================== INIT ====================
+if (window._firebaseReady) {
+  load();
+} else {
+  window._waitingForFirebase = load;
+}
+
+// 자정 재계산
+let _lastCheckedDate = todayStr();
+setInterval(() => {
+  const now = todayStr();
+  if (now !== _lastCheckedDate) { _lastCheckedDate = now; renderAll(); }
+}, 60000);
+
+// Firebase polling: 5분마다 확인
+let _lastUserAction = Date.now();
+document.addEventListener('click', () => { _lastUserAction = Date.now(); });
+document.addEventListener('keydown', () => { _lastUserAction = Date.now(); });
+
+setInterval(() => {
+  if (Date.now() - _lastUserAction < 30000) return;
+  if (!window.firebaseLoad) return;
+  window.firebaseLoad((cloudData) => {
+    if (!cloudData || !cloudData._savedAt) return;
+    if (cloudData._savedAt > (db._savedAt || '')) {
+      db = cloudData;
+      renderAll();
+    }
+  });
+}, 5 * 60 * 1000);
+</script>
+
+</body>
+</html>
